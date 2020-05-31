@@ -8,6 +8,20 @@ const DSA = require("dsa-sdk");
 class App extends Component {
   constructor(props) {
     super(props);
+    this.state = {
+      // UseCases That woul;d be displayed to the user on the first screen
+      usecases: ['Long Eth', 'Short Dai', 'Debt Bridge', 'Lending Bridge', 'Debt Swap', 'Lending Swap'],
+      // Usecase Mapping with the protocol options based on the usecase(NOTE -> We will include InstaPool as well for flash loans & so out of these the user can chose max upto two)
+      // Additionaly before executing the transaction we will have to do extra validation for eg if user wants to go long on eth then compound is a mandatory protocol and he can choses either oasis/oneInch
+      useCaseProtocolObject: {
+       'Long Eth': ['oneInch', 'oasis', 'compound'],
+       'Short Dai': ['oasis', 'maker', 'oneInch']
+       'Debt Bridge': ['maker', 'compound', 'dydx']
+       'Lending Bridge': ['maker', 'compound', 'dydx']
+       'Debt Swap': ['oasis', 'compound', 'oneInch'],
+       'Lending Swap': '[oasis', 'compound', 'oneInch']
+      }
+    }
   }
 
   async componentWillMount() {
