@@ -82,11 +82,19 @@ async function loadBlockchainData() {
  await dsa
     .cast({
       spells: spells,
+<<<<<<< HEAD
       gasPrice: web3.utils.toWei("110000", "gwei"),
+=======
+      gasPrice: web3.utils.toHex(web3.utils.toWei("110000", "gwei")),
+>>>>>>> 586d00108c2367178bcaf1bbf670d3d8e1b5ee97
     })
   } catch(err) {
     console.log(err)
   }
 }
 
+<<<<<<< HEAD
 loadBlockchainData();
+=======
+loadBlockchainData();
+>>>>>>> 586d00108c2367178bcaf1bbf670d3d8e1b5ee97
