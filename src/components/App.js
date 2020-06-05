@@ -1,62 +1,104 @@
-import React, { Component } from "react";
+import React, {Component} from "react";
 import logo from "../logo.png";
 import Web3 from "web3";
+import {executeLongEth} from '../dsa/index'
 import "./App.css";
 
 const DSA = require("dsa-sdk");
 
 class App extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      // UseCases That woul;d be displayed to the user on the first screen
-      usecases: ['Long Eth', 'Short Dai', 'Debt Bridge', 'Lending Bridge', 'Debt Swap', 'Lending Swap'],
-      // Usecase Mapping with the protocol options based on the usecase(NOTE -> We will include InstaPool as well for flash loans & so out of these the user can chose max upto two)
-      // Additionaly before executing the transaction we will have to do extra validation for eg if user wants to go long on eth then compound is a mandatory protocol and he can choses either oasis/oneInch
-      useCaseProtocolObject: {
-       'Long Eth': ['oneInch', 'oasis', 'compound'],
-       'Short Dai': ['oasis', 'maker', 'oneInch']
-       'Debt Bridge': ['maker', 'compound', 'dydx']
-       'Lending Bridge': ['maker', 'compound', 'dydx']
-       'Debt Swap': ['oasis', 'compound', 'oneInch'],
-       'Lending Swap': '[oasis', 'compound', 'oneInch']
-      }
+    constructor(props) {
+        super(props);
+        this.state = { // UseCases That woul;d be displayed to the user on the first screen
+            usecases: [
+                'Long Eth',
+                'Short Dai',
+                'Debt Bridge',
+                'Lending Bridge',
+                'Debt Swap',
+                'Lending Swap'
+            ],
+            // Usecase Mapping with the protocol options based on the usecase(NOTE -> We will include InstaPool as well for flash loans & so out of these the user can chose max upto two)
+            // Additionaly before executing the transaction we will have to do extra validation for eg if user wants to go long on eth then compound is a mandatory protocol and he can choses either oasis/oneInch
+            useCaseProtocolObject: {
+                'Long Eth': [
+                    'oneInch', 'oasis', 'compound', 'aave'
+                ],
+                'Short Dai': [
+                    'oasis', 'maker', 'oneInch'
+                ],
+                'Debt Bridge': [
+                    'maker', 'compound', 'dydx', 'aave'
+                ],
+                'Lending Bridge': [
+                    'maker', 'compound', 'dydx'
+                ],
+                'Debt Swap': [
+                    'oasis', 'compound', 'oneInch', 'aave'
+                ],
+                'Lending Swap': ['oasis', 'compound', 'oneInch']
+            }
+        }
     }
-  }
 
-  async componentWillMount() {
-    await this.loadBlockchainData();
-  }
-  async loadBlockchainData() {
-    // Fork Mainnet With Ganache-Cli & use this rpc
-    const web3 = new Web3(
-      new Web3.providers.HttpProvider("http://127.0.0.1:8545")
-    );
-    // in nodejs
-    const dsa = new DSA({
-      web3: web3,
-      mode: "node",
-      privateKey: PRIVATE_KEY,
-    });
-    // Genearting a DSA Address
-    var addr = await dsa.build({
-      gasPrice: web3.utils.toHex(web3.utils.toWei("11", "gwei")),
-    });
-    console.log(addr);
+    async componentWillMount() {
+        await this.loadWeb3()
+        await this.loadBlockchainData()
+    }
 
-    // Getting Your DSA Address
-    addr = await dsa.getAccounts("0x2Bd0772F0F2b4b21a3603812822D2124572c722D");
-    console.log(addr);
+    async loadWeb3() {
+        if (window.ethereum) {
+            const web3 = new Web3(window.ethereum)
+            await window.ethereum.enable()
+            this.setState({web3})
+        } else if (window.web3) {
+            const web3 = new Web3(window.web3.currentProvider)
+            this.setState({web3})
+        } else {
+            window.alert('Non-Ethereum browser detected. You should consider trying MetaMask!')
+        }
+    }
 
-  }
+    async loadBlockchainData() { // in nodejs
+        const dsa = new DSA({web3: this.state.web3, mode: "node", privateKey: process.env.REACT_APP_KEY});
 
-  render() {
-    return (
-      <div>
-        <h1>test</h1>
-      </div>
-    );
-  }
+        // Getting Your DSA Address
+        var existingDSAAddress = await dsa.getAccounts("0xf88b0247e611eE5af8Cf98f5303769Cba8e7177C");
+        if (existingDSAAddress.length === 0) {
+            var newDsaAddress = await dsa.build({
+                gasPrice: this.state.web3.utils.toWei("29", "gwei")
+            });
+        }
+        existingDSAAddress = await dsa.getAccounts("0xf88b0247e611eE5af8Cf98f5303769Cba8e7177C");
+        // Setting DSA Instance
+        await dsa.setInstance(existingDSAAddress[0].id)
+        this.setState({dsa})
+
+        this.executeCustomisedTransaction("Long Eth", ["oneInch", "aave"]);
+
+    }
+
+
+    async executeCustomisedTransaction(usecase, protocols) {
+        switch (usecase) {
+            case "Long Eth":
+                if (!protocols.includes("oneInch") && !protocols.includes("oasis") || (protocols.includes("oneInch") && protocols.includes("oasis"))) 
+                    throw new Error("Have to chosse either 1inch or oasis for Going Long on Eth");
+                 else if (!protocols.includes("aave") && !protocols.includes("compound") || (protocols.includes("aave") && protocols.includes("compound"))) 
+                    throw new Error("Have to chosse either aave or compound for Going Long on Eth");
+                 else 
+                    return await executeLongEth(protocols, this.state.web3, this.state.dsa);
+            default:
+                throw new Error("Wrong Usecase Option");
+        }
+    }
+
+ render() {
+        return (
+            <div>
+                <h1>test</h1>
+            </div>
+        );
+    }
 }
-
 export default App;
