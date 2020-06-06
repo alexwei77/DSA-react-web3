@@ -1,7 +1,7 @@
 import React, {Component} from "react";
 import logo from "../logo.png";
 import Web3 from "web3";
-import {executeLongEth} from '../dsa/index'
+import {executeLongEth, executeShortDai} from '../dsa/index'
 import "./App.css";
 
 const DSA = require("dsa-sdk");
@@ -9,7 +9,7 @@ const DSA = require("dsa-sdk");
 class App extends Component {
     constructor(props) {
         super(props);
-        this.state = { // UseCases That woul;d be displayed to the user on the first screen
+        this.state = { // UseCases That would be displayed to the user on the first screen
             usecases: [
                 'Long Eth',
                 'Short Dai',
@@ -20,6 +20,7 @@ class App extends Component {
             ],
             // Usecase Mapping with the protocol options based on the usecase(NOTE -> We will include InstaPool as well for flash loans & so out of these the user can chose max upto two)
             // Additionaly before executing the transaction we will have to do extra validation for eg if user wants to go long on eth then compound is a mandatory protocol and he can choses either oasis/oneInch
+            // NOTE -> For each Usecase it will be mandatory fot he user to choose exact 2
             useCaseProtocolObject: {
                 'Long Eth': [
                     'oneInch', 'oasis', 'compound', 'aave'
@@ -73,8 +74,8 @@ class App extends Component {
         // Setting DSA Instance
         await dsa.setInstance(existingDSAAddress[0].id)
         this.setState({dsa})
-
-        this.executeCustomisedTransaction("Long Eth", ["oneInch", "aave"]);
+        // For Testing only while integration this will be user's input
+        this.executeCustomisedTransaction("Short Dai", ["oasis", "maker"]);
 
     }
 
@@ -88,17 +89,25 @@ class App extends Component {
                     throw new Error("Have to chosse either aave or compound for Going Long on Eth");
                  else 
                     return await executeLongEth(protocols, this.state.web3, this.state.dsa);
+                
+
+            case "Short Dai":
+                if (!protocols.includes("oneInch") && !protocols.includes("oasis") || (protocols.includes("oneInch") && protocols.includes("oasis"))) 
+                    throw new Error("Have to chosse either 1inch or oasis for Going Short on DAI");
+                 else 
+                    return await executeShortDai(protocols, this.state.web3, this.state.dsa);
+                
+
             default:
                 throw new Error("Wrong Usecase Option");
         }
     }
 
- render() {
-        return (
-            <div>
-                <h1>test</h1>
-            </div>
-        );
+    render() {
+        return (<div>
+            <h1>test</h1>
+        </div>);
     }
 }
 export default App;
+
