@@ -5,7 +5,8 @@ import {
     borrow,
     swap,
     payback,
-    withdraw
+    withdraw,
+    getMaxAmount
 } from './utils'
 
 export const executeLongEth = async (protocols, web3, dsa) => {
@@ -22,22 +23,20 @@ export const executeLongEth = async (protocols, web3, dsa) => {
     if (protocols.includes("oasis")) {
         let buyDetail = await dsa.oasis.getBuyAmount("ETH", "DAI", borrowAmount, slippage);
 
-        spells = await swap(spells, "oasis", eth_address, dai_address, borrowAmtInWei, buyDetail.unitAmt)
+        spells = await swap(spells, "oasis", "sell", eth_address, dai_address, borrowAmtInWei, buyDetail.unitAmt)
 
     } else { // Other option is oneInch
         let buyDetail = await await dsa.oneInch.getBuyAmount("ETH", "DAI", borrowAmount, slippage);
 
-        spells = await swap(spells, "oneInch", eth_address, dai_address, borrowAmtInWei, buyDetail.unitAmt)
+        spells = await swap(spells, "oneInch", "sell", eth_address, dai_address, borrowAmtInWei, buyDetail.unitAmt)
     }
     if (protocols.includes("compound")) { // For Max Amt "-1" wasn't compatible
-        var BN = await web3.utils.BN;
-        spells = await deposit(spells, "compound", eth_address, new BN("115792089237316195423570985008687907853269984665640564039457584007913129639935"))
+        spells = await deposit(spells, "compound", eth_address, await getMaxAmount(web3))
 
         spells = await borrow(spells, "compound", dai_address, borrowAmtInWei)
 
     } else { // For Max Amt "-1" wasn't compatible
-        var BN = await web3.utils.BN;
-        spells = await deposit(spells, "aave", eth_address, new BN("115792089237316195423570985008687907853269984665640564039457584007913129639935"))
+        spells = await deposit(spells, "aave", eth_address, await getMaxAmount(web3))
 
         spells = await borrow(spells, "aave", dai_address, borrowAmtInWei)
     } spells = await flashPayback(spells, dai_address)
@@ -67,21 +66,20 @@ export const executeShortDai = async (protocols, web3, dsa) => {
     if (protocols.includes("oasis")) {
         let buyDetail = await dsa.oasis.getBuyAmount("USDC", "DAI", borrowAmount, slippage);
 
-        spells = await swap(spells, "oasis", usdc_address, dai_address, borrowAmtInWei, buyDetail.unitAmt)
+        spells = await swap(spells, "oasis", "sell", usdc_address, dai_address, borrowAmtInWei, buyDetail.unitAmt)
 
     } else {
         let buyDetail = await dsa.oneInch.getBuyAmount("USDC", "DAI", borrowAmount, slippage);
 
-        spells = await swap(spells, "oneInch", usdc_address, dai_address, borrowAmtInWei, buyDetail.unitAmt)
+        spells = await swap(spells, "oneInch", "sell", usdc_address, dai_address, borrowAmtInWei, buyDetail.unitAmt)
     }
 
-    await spells.add({connector: "maker", method: "open", args: ["USDC-A"]});
-    var BN = await web3.utils.BN;
+    await spells.add({connector: "maker", method: "open", args: ["USDC-A"]})
 
     await spells.add({
         connector: "maker",
         method: "deposit",
-        args: [0, new BN("115792089237316195423570985008687907853269984665640564039457584007913129639935"), 0, 0,]
+        args: [0, await getMaxAmount(web3), 0, 0,]
     });
 
     await spells.add({
@@ -117,23 +115,21 @@ export const executeDebtSwap = async (protocols, web3, dsa) => {
     if (protocols.includes("oasis")) {
         let buyDetail = await dsa.oasis.getBuyAmount("USDC", "DAI", borrowAmount, slippage);
 
-        spells = await swap(spells, "oasis", usdc_address, dai_address, borrowAmtInWei, buyDetail.unitAmt)
+        spells = await swap(spells, "oasis", "sell", usdc_address, dai_address, borrowAmtInWei, buyDetail.unitAmt)
 
     } else {
         let buyDetail = await dsa.oneInch.getBuyAmount("USDC", "DAI", borrowAmount, slippage);
 
-        spells = await swap(spells, "oneInch", usdc_address, dai_address, borrowAmtInWei, buyDetail.unitAmt)
+        spells = await swap(spells, "oneInch", "sell", usdc_address, dai_address, borrowAmtInWei, buyDetail.unitAmt)
     }
 
     if (protocols.includes("compound")) {
-        var BN = await web3.utils.BN;
-        spells = await payback(spells, "compound", usdc_address, new BN("115792089237316195423570985008687907853269984665640564039457584007913129639935"))
+        spells = await payback(spells, "compound", usdc_address, await getMaxAmount(web3))
 
         spells = await borrow(spells, "compound", dai_address, borrowAmount)
     } else {
 
-        var BN = await web3.utils.BN;
-        spells = await payback(spells, "aave", usdc_address, new BN("115792089237316195423570985008687907853269984665640564039457584007913129639935"))
+        spells = await payback(spells, "aave", usdc_address, await getMaxAmount(web3))
 
         spells = await borrow(spells, "aave", dai_address, borrowAmount)
 
@@ -166,17 +162,15 @@ export const executeLendingSwap = async (protocols, web3, dsa) => {
     if (protocols.includes("oasis")) {
         let buyDetail = await dsa.oasis.getBuyAmount("USDC", "DAI", withdrawAmtInWei, slippage);
 
-        spells = await swap(spells, "oasis", usdc_address, dai_address, withdrawAmtInWei, buyDetail.unitAmt)
+        spells = await swap(spells, "oasis", "sell", usdc_address, dai_address, withdrawAmtInWei, buyDetail.unitAmt)
 
     } else {
 
         let buyDetail = await dsa.oneInch.getBuyAmount("USDC", "DAI", withdrawAmtInWei, slippage);
 
-        spells = await swap(spells, "oneInch", usdc_address, dai_address, withdrawAmtInWei, buyDetail.unitAmt)
+        spells = await swap(spells, "oneInch", "sell", usdc_address, dai_address, withdrawAmtInWei, buyDetail.unitAmt)
     }
-
-    var BN = await web3.utils.BN;
-    spells = await deposit(spells, "compound", usdc_address, new BN("115792089237316195423570985008687907853269984665640564039457584007913129639935"))
+    spells = await deposit(spells, "compound", usdc_address, await getMaxAmount(web3))
 
 
     var data = {

@@ -52,18 +52,23 @@ export const withdraw = async (spells, protocol, assetAddress, amount) => {
     return spells
 }
 
-export const swap = async (spells, protocol, sellAddress, buyAddress, sellAmount, buyAmount) => {
+export const swap = async (spells, protocol, method, buyAddress, sellAddress, knownAmount, derivedAmount) => {
     await spells.add({
         connector: "oneInch",
-        method: "sell",
+        method: method,
         args: [
-            sellAddress,
             buyAddress,
-            sellAmount,
-            buyAmount,
+            sellAddress,
+            knownAmount,
+            derivedAmount,
             0,
             0
         ]
     });
     return spells
+}
+
+export const getMaxAmount = async (web3) => {
+    const BN = await web3.utils.BN;
+    return new BN("115792089237316195423570985008687907853269984665640564039457584007913129639935");
 }

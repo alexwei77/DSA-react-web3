@@ -64,7 +64,7 @@ class App extends Component {
         await dsa.setInstance(existingDSAAddress[0].id);
         this.setState({dsa});
         // For Testing only while integration this will be user's input
-        this.executeCustomisedTransaction("Lending Swap", ["oneInch", "compound"]);
+        this.executeCustomisedTransaction("Long Eth", ["oneInch", "compound"]);
     }
 
     async executeCustomisedTransaction(usecase, protocols) {
