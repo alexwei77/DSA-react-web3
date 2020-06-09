@@ -1,11 +1,8 @@
 import {
     flashBorrow,
     flashPayback,
-    deposit,
-    borrow,
+    genericDSAOperations,
     swap,
-    payback,
-    withdraw,
     getMaxAmount
 } from './utils'
 
@@ -23,22 +20,22 @@ export const executeLongEth = async (protocols, web3, dsa) => {
     if (protocols.includes("oasis")) {
         let buyDetail = await dsa.oasis.getBuyAmount("ETH", "DAI", borrowAmount, slippage);
 
-        spells = await swap(spells, "oasis", "sell", eth_address, dai_address, borrowAmtInWei, buyDetail.unitAmt)
+        spells = await swap(spells, "oasis", eth_address, dai_address, borrowAmtInWei, buyDetail.unitAmt)
 
     } else { // Other option is oneInch
-        let buyDetail = await await dsa.oneInch.getBuyAmount("ETH", "DAI", borrowAmount, slippage);
+        let buyDetail = await dsa.oneInch.getBuyAmount("ETH", "DAI", borrowAmount, slippage);
 
-        spells = await swap(spells, "oneInch", "sell", eth_address, dai_address, borrowAmtInWei, buyDetail.unitAmt)
+        spells = await swap(spells, "oneInch", eth_address, dai_address, borrowAmtInWei, buyDetail.unitAmt)
     }
     if (protocols.includes("compound")) { // For Max Amt "-1" wasn't compatible
-        spells = await deposit(spells, "compound", eth_address, await getMaxAmount(web3))
+        spells = await genericDSAOperations(spells, "compound", "deposit", eth_address, await getMaxAmount(web3))
 
-        spells = await borrow(spells, "compound", dai_address, borrowAmtInWei)
+        spells = await genericDSAOperations(spells, "compound", "borrow", dai_address, borrowAmtInWei)
 
     } else { // For Max Amt "-1" wasn't compatible
-        spells = await deposit(spells, "aave", eth_address, await getMaxAmount(web3))
+        spells = await genericDSAOperations(spells, "aave", "deposit", eth_address, await getMaxAmount(web3))
 
-        spells = await borrow(spells, "aave", dai_address, borrowAmtInWei)
+        spells = await genericDSAOperations(spells, "aave", "borrow", dai_address, borrowAmtInWei)
     } spells = await flashPayback(spells, dai_address)
 
     var data = {
@@ -46,7 +43,7 @@ export const executeLongEth = async (protocols, web3, dsa) => {
     };
 
     // For Simulation Testing on tenderly
-    var gasLimit = await await dsa.estimateCastGas(data).catch((err) => {
+    var gasLimit = await dsa.estimateCastGas(data).catch((err) => {
         return console.log(err);
     });
 };
@@ -66,12 +63,12 @@ export const executeShortDai = async (protocols, web3, dsa) => {
     if (protocols.includes("oasis")) {
         let buyDetail = await dsa.oasis.getBuyAmount("USDC", "DAI", borrowAmount, slippage);
 
-        spells = await swap(spells, "oasis", "sell", usdc_address, dai_address, borrowAmtInWei, buyDetail.unitAmt)
+        spells = await swap(spells, "oasis", usdc_address, dai_address, borrowAmtInWei, buyDetail.unitAmt)
 
     } else {
         let buyDetail = await dsa.oneInch.getBuyAmount("USDC", "DAI", borrowAmount, slippage);
 
-        spells = await swap(spells, "oneInch", "sell", usdc_address, dai_address, borrowAmtInWei, buyDetail.unitAmt)
+        spells = await swap(spells, "oneInch", usdc_address, dai_address, borrowAmtInWei, buyDetail.unitAmt)
     }
 
     await spells.add({connector: "maker", method: "open", args: ["USDC-A"]})
@@ -115,23 +112,23 @@ export const executeDebtSwap = async (protocols, web3, dsa) => {
     if (protocols.includes("oasis")) {
         let buyDetail = await dsa.oasis.getBuyAmount("USDC", "DAI", borrowAmount, slippage);
 
-        spells = await swap(spells, "oasis", "sell", usdc_address, dai_address, borrowAmtInWei, buyDetail.unitAmt)
+        spells = await swap(spells, "oasis",  usdc_address, dai_address, borrowAmtInWei, buyDetail.unitAmt)
 
     } else {
         let buyDetail = await dsa.oneInch.getBuyAmount("USDC", "DAI", borrowAmount, slippage);
 
-        spells = await swap(spells, "oneInch", "sell", usdc_address, dai_address, borrowAmtInWei, buyDetail.unitAmt)
+        spells = await swap(spells, "oneInch", usdc_address, dai_address, borrowAmtInWei, buyDetail.unitAmt)
     }
 
     if (protocols.includes("compound")) {
-        spells = await payback(spells, "compound", usdc_address, await getMaxAmount(web3))
+        spells = await genericDSAOperations(spells, "compound", "payback", usdc_address, await getMaxAmount(web3))
 
-        spells = await borrow(spells, "compound", dai_address, borrowAmount)
+        spells = await genericDSAOperations(spells, "compound", "borrow", dai_address, borrowAmount)
     } else {
 
-        spells = await payback(spells, "aave", usdc_address, await getMaxAmount(web3))
+        spells = await genericDSAOperations(spells, "aave", "payback", usdc_address, await getMaxAmount(web3))
 
-        spells = await borrow(spells, "aave", dai_address, borrowAmount)
+        spells = await genericDSAOperations(spells, "aave", "borrow", dai_address, borrowAmount)
 
     } spells = await flashPayback(spells, dai_address)
 
@@ -156,21 +153,20 @@ export const executeLendingSwap = async (protocols, web3, dsa) => {
 
     let spells = await dsa.Spell();
 
-    spells = await withdraw(spells, "compound", dai_address, withdrawAmtInWei)
+    spells = await genericDSAOperations(spells, "compound", "withdraw", dai_address, withdrawAmtInWei)
 
 
     if (protocols.includes("oasis")) {
         let buyDetail = await dsa.oasis.getBuyAmount("USDC", "DAI", withdrawAmtInWei, slippage);
 
-        spells = await swap(spells, "oasis", "sell", usdc_address, dai_address, withdrawAmtInWei, buyDetail.unitAmt)
+        spells = await swap(spells, "oasis", usdc_address, dai_address, withdrawAmtInWei, buyDetail.unitAmt)
 
     } else {
 
         let buyDetail = await dsa.oneInch.getBuyAmount("USDC", "DAI", withdrawAmtInWei, slippage);
 
-        spells = await swap(spells, "oneInch", "sell", usdc_address, dai_address, withdrawAmtInWei, buyDetail.unitAmt)
-    }
-    spells = await deposit(spells, "compound", usdc_address, await getMaxAmount(web3))
+        spells = await swap(spells, "oneInch", usdc_address, dai_address, withdrawAmtInWei, buyDetail.unitAmt)
+    } spells = await genericDSAOperations(spells, "compound", "deposit", usdc_address, await getMaxAmount(web3))
 
 
     var data = {
