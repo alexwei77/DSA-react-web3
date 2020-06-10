@@ -2,6 +2,13 @@ import React, {Component} from "react";
 import logo from "../logo.png";
 import Web3 from "web3";
 import {executeLongEth, executeShortDai, executeDebtSwap, executeLendingSwap} from "../dsa/index";
+import {
+    flashBorrow,
+    flashPayback,
+    genericDSAOperations,
+    swap,
+    getMaxAmount
+} from "../dsa/utils";
 import "./App.css";
 
 const DSA = require("dsa-sdk");
@@ -27,7 +34,11 @@ class App extends Component {
                     "oasis", "compound", "oneInch", "aave"
                 ],
                 "Lending Swap": ["oasis", "compound", "oneInch"]
-            }
+            },
+            lendingProtocols: [
+                "compound", "aave", "dydx"
+            ],
+            dexProtocols: ["oasis", "oneInch", "kyber", "curve"]
         };
     }
 
@@ -64,7 +75,27 @@ class App extends Component {
         await dsa.setInstance(existingDSAAddress[0].id);
         this.setState({dsa});
         // For Testing only while integration this will be user's input
-        this.executeCustomisedTransaction("Long Eth", ["oneInch", "compound"]);
+        // this.executeCustomisedTransaction("Long Eth", ["oneInch", "compound"]);
+        // Custom Array Sample
+        // only acceptable assets for now are eth, dai & usdc
+        // for testing
+        let dai_address = dsa.tokens.info.dai.address;
+        let eth_address = dsa.tokens.info.eth.address;
+        this.customReciepeMaker([
+            {
+                "aave": [
+                    {
+                        "name": "deposit",
+                        "asset": dai_address,
+                        "amount": 20
+                    }, {
+                        "name": "borrow",
+                        "asset": eth_address,
+                        "amount": 20
+                    }
+                ]
+            }
+        ], this.state.web3, dsa)
     }
 
     async executeCustomisedTransaction(usecase, protocols) {
@@ -78,12 +109,14 @@ class App extends Component {
                     return await executeLongEth(protocols, this.state.web3, this.state.dsa);
                 
 
+
             case "Short Dai":
                 if ((!protocols.includes("oneInch") && !protocols.includes("oasis")) || (protocols.includes("oneInch") && protocols.includes("oasis"))) 
                     throw new Error("Have to chosse either 1inch or oasis for Going Short on DAI");
                  else 
                     return await executeShortDai(protocols, this.state.web3, this.state.dsa);
                 
+
 
             case "Debt Swap":
                 if ((!protocols.includes("oneInch") && !protocols.includes("oasis")) || (protocols.includes("oneInch") && protocols.includes("oasis"))) 
@@ -93,21 +126,108 @@ class App extends Component {
                  else 
                     return await executeDebtSwap(protocols, this.state.web3, this.state.dsa);
                 
-             case "Lending Swap":
+
+
+            case "Lending Swap":
                 if ((!protocols.includes("oneInch") && !protocols.includes("oasis")) || (protocols.includes("oneInch") && protocols.includes("oasis"))) 
                     throw new Error("Have to chosse either 1inch or oasis for Lending Swap");
                  else 
                     return await executeLendingSwap(protocols, this.state.web3, this.state.dsa);
+                
+
 
             default:
                 throw new Error("Wrong Usecase Option");
         }
     }
 
+    async customReciepeMaker(customProtocols, web3, dsa) {
+        try {
+            let spells = await dsa.Spell();
+            for (let i = 0; i < customProtocols.length; i++) {
+                const protocols = Object.keys(customProtocols[i])
+                if (protocols[i] != "maker") { // since the spell structure for maker connectors is different from others
+                    for (let j = 0; j < customProtocols[i][protocols[i]].length; j++) {
+                        switch (customProtocols[i][protocols[i]][j].name) {
+                            case "borrow":
+                                if (!customProtocols[i][protocols[i]][j].amount) 
+                                    throw new Error("Amount Mandatory for Borrow");
+                                 else 
+                                    spells = await genericDSAOperations(spells, protocols[i], "borrow", customProtocols[i][protocols[i]][j].asset, customProtocols[i][protocols[i]][j].amount);
+                                
+                                break;
+
+                            case "deposit":
+                                if (!customProtocols[i][protocols[i]][j].amount) 
+                                    spells = await genericDSAOperations(spells, protocols[i], "deposit", customProtocols[i][protocols[i]][j].asset, await getMaxAmount(web3));
+                                 else 
+                                    spells = await genericDSAOperations(spells, protocols[i], "deposit", customProtocols[i][protocols[i]][j].asset, customProtocols[i][protocols[i]][j].amount);
+                                
+                                break;
+
+                            case "withdraw":
+                                if (!customProtocols[i][protocols[i]][j].amount) 
+                                    throw new Error("Amount Mandatory for Withdraw");
+                                 else 
+                                    spells = await genericDSAOperations(spells, protocols[i], "withdraw", customProtocols[i][protocols[i]][j].asset, customProtocols[i][protocols[i]][j].amount);
+                                
+                                break;
+
+                            case "payback":
+                                if (!customProtocols[i][protocols[i]][j].amount) 
+                                    spells = await genericDSAOperations(spells, protocols[i], "payback", customProtocols[i][protocols[i]][j].asset, await getMaxAmount(web3));
+                                 else 
+                                    spells = await genericDSAOperations(spells, protocols[i], "payback", customProtocols[i][protocols[i]][j].asset, customProtocols[i][protocols[i]][j].amount);
+                                
+                                break;
+
+                            case "flashBorrow":
+                                if (!customProtocols[i][protocols[i]][j].amount) 
+                                    throw new Error("Amount Mandatory for Flash Borrow");
+                                 else 
+                                    spells = await flashBorrow(spells, customProtocols[i][protocols[i]][j].asset, customProtocols[i][protocols[i]][j].amount);
+                                
+                                break;
+
+                            case "flashPayback":
+                                if (customProtocols[i][protocols[i]][j].amount) 
+                                    throw new Error("Amount Not Required for Flash Payback");
+                                 else 
+                                    spells = await flashPayback(spells, customProtocols[i][protocols[i]][j].asset);      
+                                
+                                break;
+
+                            case "swap":
+                                const slippage = 2;
+                                const swapDetail = await dsa.protocols[i].getBuyAmount(customProtocols[i][protocols[i]][j].buyingTokenSymbol, customProtocols[i][protocols[i]][j].sellingTokenSymbol, customProtocols[i][protocols[i]][j].amount, slippage);
+                                spells = await swap(spells, protocols[i], customProtocols[i][protocols[i]][j].buyAddress, customProtocols[i][protocols[i]][j].sellAddress, customProtocols[i][protocols[i]][j].amount, swapDetail.unitAmt);
+                                break;
+
+                            default:
+                                throw new Error("Invalid Operation");
+                        }
+                    }
+                }
+            }
+            var data = {
+                spells: spells
+            };
+            console.log(data)
+            // For Simulation Testing on tenderly
+            var gasLimit = await dsa.estimateCastGas(data).catch((err) => {
+                return console.log(err);
+            });
+        } catch (err) {
+            console.log(err)
+        }
+    }
+
     render() {
-        return (<div>
-            <h1>test</h1>
-        </div>);
+        return (
+            <div>
+                <h1>test</h1>
+            </div>
+        );
     }
 }
 export default App;
