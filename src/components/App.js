@@ -74,9 +74,6 @@ class App extends Component {
         // Setting DSA Instance
         await dsa.setInstance(existingDSAAddress[0].id);
         this.setState({dsa});
-        // For Testing only while integration this will be user's input
-        // this.executeCustomisedTransaction("Long Eth", ["oneInch", "compound"]);
-        // only acceptable assets for now are eth, dai & usdc
         // for testing
         let dai_address = dsa.tokens.info.dai.address;
         let eth_address = dsa.tokens.info.eth.address;
