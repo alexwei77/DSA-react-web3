@@ -7,7 +7,9 @@ import {
     flashPayback,
     genericDSAOperations,
     swap,
-    getMaxAmount
+    getMaxAmount,
+    openMakerVault,
+    makerGenericOperations
 } from "../dsa/utils";
 import "./App.css";
 
@@ -35,6 +37,10 @@ class App extends Component {
                 ],
                 "Lending Swap": ["oasis", "compound", "oneInch"]
             },
+            makerVaultOptions: {
+                "eth": "ETH-A",
+                "usdc": "USDC-A"
+            },
             lendingProtocols: [
                 "compound", "aave", "dydx"
             ],
@@ -61,16 +67,18 @@ class App extends Component {
     }
 
     async loadBlockchainData() { // in nodejs
-        const dsa = new DSA({web3: this.state.web3, mode: "node", privateKey: process.env.REACT_APP_KEY});
+        const dsa = new DSA({web3: this.state.web3});
 
         // Getting Your DSA Address
         var existingDSAAddress = await dsa.getAccounts("0xf88b0247e611eE5af8Cf98f5303769Cba8e7177C");
+        console.log(existingDSAAddress)
         if (existingDSAAddress.length === 0) {
             var newDsaAddress = await dsa.build({
                 gasPrice: this.state.web3.utils.toWei("29", "gwei")
             });
         }
         existingDSAAddress = await dsa.getAccounts("0xf88b0247e611eE5af8Cf98f5303769Cba8e7177C");
+        console.log(existingDSAAddress)
         // Setting DSA Instance
         await dsa.setInstance(existingDSAAddress[0].id);
         this.setState({dsa});
@@ -79,21 +87,21 @@ class App extends Component {
         let eth_address = dsa.tokens.info.eth.address;
         // Custom Array Sample
         this.customReciepeMaker([
-                    {
-                        "name": "borrow",
-                        "protocol": "aave",
-                        "asset": dai_address,
-                        "amount": 20
-                    }, {
-                        "name": "swap",
-                        "protocol": "oasis",
-                        // selling token
-                        "asset": dai_address,
-                        "buyingTokenSymbol": "ETH",
-                        "sellingTokenSymbol": "DAI",
-                        "buyAddress": eth_address, 
-                        "amount": 20
-                    }
+            {
+                "name": "borrow",
+                "protocol": "aave",
+                "asset": dai_address,
+                "amount": 20
+            }, {
+                "name": "swap",
+                "protocol": "oasis",
+                // selling token
+                "asset": dai_address,
+                "buyingTokenSymbol": "ETH",
+                "sellingTokenSymbol": "DAI",
+                "buyAddress": eth_address,
+                "amount": 20
+            }
         ], this.state.web3, dsa)
     }
     // Not Needed for now
@@ -145,65 +153,107 @@ class App extends Component {
             let spells = await dsa.Spell();
             for (let i = 0; i < customProtocols.length; i++) {
                 if (customProtocols[i].protocol != "maker") { // since the spell structure for maker connectors is different from others
-                        switch (customProtocols[i].name) {
-                            case "borrow":
-                                if (!customProtocols[i].amount) 
-                                    throw new Error("Amount Mandatory for Borrow");
-                                 else 
-                                    spells = await genericDSAOperations(spells, customProtocols[i].protocol, "borrow", customProtocols[i].asset, customProtocols[i].amount);
-                                break;
+                    switch (customProtocols[i].name) {
+                        case "borrow":
+                            if (!customProtocols[i].amount) 
+                                throw new Error("Amount Mandatory for Borrow");
+                             else 
+                                spells = await genericDSAOperations(spells, customProtocols[i].protocol, "borrow", customProtocols[i].asset, customProtocols[i].amount);
+                            
+                            break;
 
-                            case "deposit":
-                                if (!customProtocols[i].amount) 
-                                    spells = await genericDSAOperations(spells, customProtocols[i].protocol, "deposit", customProtocols[i].asset, await getMaxAmount(web3));
-                                 else 
-                                    spells = await genericDSAOperations(spells, customProtocols[i].protocol, "deposit", customProtocols[i].asset, customProtocols[i].amount);
-                                
-                                break;
+                        case "deposit":
+                            if (!customProtocols[i].amount) 
+                                spells = await genericDSAOperations(spells, customProtocols[i].protocol, "deposit", customProtocols[i].asset, await getMaxAmount(web3));
+                             else 
+                                spells = await genericDSAOperations(spells, customProtocols[i].protocol, "deposit", customProtocols[i].asset, customProtocols[i].amount);
+                            
 
-                            case "withdraw":
-                                if (!customProtocols[i].amount) 
-                                    throw new Error("Amount Mandatory for Withdraw");
-                                 else 
-                                    spells = await genericDSAOperations(spells, customProtocols[i].protocol, "withdraw", customProtocols[i].asset, customProtocols[i].amount);
-                                
-                                break;
+                            break;
 
-                            case "payback":
-                                if (!customProtocols[i].amount) 
-                                    spells = await genericDSAOperations(spells, customProtocols[i].protocol, "payback", customProtocols[i].asset, await getMaxAmount(web3));
-                                 else 
-                                    spells = await genericDSAOperations(spells, customProtocols[i].protocol, "payback", customProtocols[i].asset, customProtocols[i].amount);
-                                
-                                break;
+                        case "withdraw":
+                            if (!customProtocols[i].amount) 
+                                throw new Error("Amount Mandatory for Withdraw");
+                             else 
+                                spells = await genericDSAOperations(spells, customProtocols[i].protocol, "withdraw", customProtocols[i].asset, customProtocols[i].amount);
+                            
 
-                            case "flashBorrow":
-                                if (!customProtocols[i].amount) 
-                                    throw new Error("Amount Mandatory for Flash Borrow");
-                                 else 
-                                    spells = await flashBorrow(spells, customProtocols[i].asset, customProtocols[i].amount);
-                                
-                                break;
+                            break;
 
-                            case "flashPayback":
-                                if (customProtocols[i].amount) 
-                                    throw new Error("Amount Not Required for Flash Payback");
-                                 else 
-                                    spells = await flashPayback(spells, customProtocols[i].asset);      
-                                
-                                break;
+                        case "payback":
+                            if (!customProtocols[i].amount) 
+                                spells = await genericDSAOperations(spells, customProtocols[i].protocol, "payback", customProtocols[i].asset, await getMaxAmount(web3));
+                             else 
+                                spells = await genericDSAOperations(spells, customProtocols[i].protocol, "payback", customProtocols[i].asset, customProtocols[i].amount);
+                            
 
-                            case "swap":
-                                const slippage = 2;
-                                // to remove quotes
-                                const protocolInstance = customProtocols[i].protocol.replace(/['"]+/g, '');
-                                const swapDetail = await dsa.oasis.getBuyAmount(customProtocols[i].buyingTokenSymbol, customProtocols[i].sellingTokenSymbol, customProtocols[i].amount, slippage);
-                                spells = await swap(spells, customProtocols[i].protocol, customProtocols[i].buyAddress, customProtocols[i].asset, customProtocols[i].amount, swapDetail.unitAmt);
-                                break;
+                            break;
 
-                            default:
-                                throw new Error("Invalid Operation");
-                        }
+                        case "flashBorrow":
+                            if (!customProtocols[i].amount) 
+                                throw new Error("Amount Mandatory for Flash Borrow");
+                             else 
+                                spells = await flashBorrow(spells, customProtocols[i].asset, customProtocols[i].amount);
+                            
+
+                            break;
+
+                        case "flashPayback":
+                            if (customProtocols[i].amount) 
+                                throw new Error("Amount Not Required for Flash Payback");
+                             else 
+                                spells = await flashPayback(spells, customProtocols[i].asset);
+                            
+
+                            break;
+
+                        case "swap":
+                            const slippage = 2;
+                            // to remove quotes
+                            const protocolInstance = customProtocols[i].protocol.replace(/['"]+/g, '');
+                            const swapDetail = await dsa.oasis.getBuyAmount(customProtocols[i].buyingTokenSymbol, customProtocols[i].sellingTokenSymbol, customProtocols[i].amount, slippage);
+                            spells = await swap(spells, customProtocols[i].protocol, customProtocols[i].buyAddress, customProtocols[i].asset, customProtocols[i].amount, swapDetail.unitAmt);
+                            break;
+
+                        default:
+                            throw new Error("Invalid Operation");
+                    }
+                } else {
+                    switch (customProtocols[i].name) {
+                        case 'openVault': spells = await openMakerVault(spells, this.state.makerVaultOptions[customProtocols[i].asset]);
+                            break;
+
+                        case 'deposit':
+                            if (!customProtocols[i].vaultId) 
+                                throw new Error("Vault Id Mandatory");
+                            
+                            spells = await makerGenericOperations(spells, "deposit", customProtocols[i].vaultId, customProtocols[i].amount)
+                            break
+
+                        case 'borrow':
+                            if (!customProtocols[i].vaultId) 
+                                throw new Error("Vault Id Mandatory");
+                            
+                            spells = await makerGenericOperations(spells, "borrow", customProtocols[i].vaultId, customProtocols[i].amount)
+                            break
+
+                        case 'payback':
+                            if (!customProtocols[i].vaultId) 
+                                throw new Error("Vault Id Mandatory");
+                            
+                            spells = await makerGenericOperations(spells, "payback", customProtocols[i].vaultId, customProtocols[i].amount)
+                            break
+
+                        case 'withdraw':
+                            if (!customProtocols[i].vaultId) 
+                                throw new Error("Vault Id Mandatory");
+                            
+                            spells = await makerGenericOperations(spells, "withdraw", customProtocols[i].vaultId, customProtocols[i].amount)
+                            break
+
+                        default:
+                            throw new Error("Invalid Operation");
+                    }
                 }
             }
             var data = {

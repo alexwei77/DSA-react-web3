@@ -44,39 +44,16 @@ export const swap = async (spells, protocol, buyAddress, sellAddress, knownAmoun
 
 export const openMakerVault = async (spells, collateral) => { // Types ETH-A, BAT-A, USDC-A
     await spells.add({connector: "maker", method: "open", args: [collateral]});
+    return spells
 };
 
-export const depositMaker = async (spells, vaultId, amount) => {
-    await spells.add({
+export const makerGenericOperations = async (spells, method, vaultId, amount) => {
+     await spells.add({
         connector: "maker",
-        method: "deposit",
+        method: method,
         args: [vaultId, amount, 0, 0]
     });
-};
-
-export const withdrawMaker = async (spells, vaultId, amount) => {
-    await spells.add({
-        connector: "maker",
-        method: "withdraw",
-        args: [vaultId, amount, 0, 0]
-    });
-};
-
-export const borrowMaker = async (spells, vaultId, amount) => {
-    await spells.add({
-        connector: "maker",
-        method: "borrow",
-        args: [vaultId, amount, 0, 0]
-    });
-};
-
-export const paybackMaker = async (spells, vaultId, amount) => {
-    await spells.add({
-        connector: "maker",
-        method: "payback",
-        args: [vaultId, amount, 0, 0]
-    });
-};
+}
 
 export const getMaxAmount = async (web3) => {
     const BN = await web3.utils.BN;
