@@ -19,6 +19,8 @@ class App extends Component {
         this.state = {
 			color: '#85f7ff',
 	        buttonText: "Connect",
+			name: "",
+            shareholders: [{ name: "" }]
 			
 			// UseCases That would be displayed to the user on the first screen
             usecases: [
@@ -291,6 +293,36 @@ class App extends Component {
             console.log(err)
         }
     }
+	
+	handleNameChange = evt => {
+    this.setState({ name: evt.target.value });
+  };
+
+  handleShareholderNameChange = idx => evt => {
+    const newShareholders = this.state.shareholders.map((shareholder, sidx) => {
+      if (idx !== sidx) return shareholder;
+      return { ...shareholder, name: evt.target.value };
+    });
+
+    this.setState({ shareholders: newShareholders });
+  };
+
+  handleSubmit = evt => {
+    const { name, shareholders } = this.state;
+    alert(`Incorporated: ${name} with ${shareholders.length} shareholders`);
+  };
+
+  handleAddShareholder = () => {
+    this.setState({
+      shareholders: this.state.shareholders.concat([{ name: "" }])
+    });
+  };
+
+  handleRemoveShareholder = idx => () => {
+    this.setState({
+      shareholders: this.state.shareholders.filter((s, sidx) => idx !== sidx)
+    });
+  };
 
     render() {
         return (
@@ -303,7 +335,45 @@ class App extends Component {
 		<button onClick = {this.login} style={{backgroundColor: this.state.color }}>{this.state.buttonText}</button>
       </nav>
 	    // for operation with dsa pass dsa object from state while calling customrecipe function
-            </div>
+            //dropdown loader
+			<div>
+			 <form onSubmit={this.handleSubmit}>
+        {this.state.shareholders.map((shareholder, idx) => (
+          <div >
+            <select name="functions" id="functions">
+            <option value="swap">swap</option>
+            <option value="deposit">deposit</option>
+            <option value="withdraw">withdraw</option>
+            </select>
+            <select name="Protocols" id="Protocols">
+            <option value="compound">compound</option>
+            <option value="uniswap">uniswap</option>
+            <option value="aave">aave</option>
+            </select>
+            <input
+              type="text"
+              placeholder={`amount`}
+              value={shareholder.name}
+              onChange={this.handleShareholderNameChange(idx)}
+            />
+            <button
+              type="button"
+              onClick={this.handleRemoveShareholder(idx)}
+            >
+              -
+            </button>
+          </div>
+        ))}
+        <button
+          type="button"
+          onClick={this.handleAddShareholder}
+        >
+          Add
+        </button>
+        <button>execute</button>
+      </form>
+	  <div	
+			</div>
         );
     }
 }
