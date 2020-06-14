@@ -86,33 +86,22 @@ class App extends Component {
 
     }
 
-    async loadWeb3() {
-    if (window.ethereum) {
-      const web3 = new Web3(window.ethereum)
-      await window.ethereum.enable()
-	  this.setState({ web3 })
-    }
-    else if (window.web3) {
-      const web3 = new Web3(window.web3.currentProvider)
-	  this.setState({ web3 })
-    }
-    else {
-      window.alert('Non-Ethereum browser detected. You should consider trying MetaMask!')
-    }
-    }
-
-    async loadBlockchainData() { // in nodejs
+    async loadBlockchainData() { // in browser with react
+	    const accounts = await this.state.web3.eth.getAccounts()
+        this.setState({ account: accounts[0] })
+        console.log(this.state.account);
         const dsa = new DSA(this.state.web3);
 		this.setState({dsa});
 
         // Getting Your DSA Address
-        var existingDSAAddress = await dsa.getAccounts("0xf88b0247e611eE5af8Cf98f5303769Cba8e7177C");
+        var existingDSAAddress = await dsa.getAccounts(this.state.account);
         console.log(existingDSAAddress)
         if (existingDSAAddress.length === 0) {
             var newDsaAddress = await dsa.build({
                 gasPrice: this.state.web3.utils.toWei("29", "gwei")
             });
         }
+		//change to this.state.account does this requires address as string?
         existingDSAAddress = await dsa.getAccounts("0xf88b0247e611eE5af8Cf98f5303769Cba8e7177C");
         console.log(existingDSAAddress)
         // Setting DSA Instance
@@ -313,6 +302,7 @@ class App extends Component {
         </div>
 		<button onClick = {this.login} style={{backgroundColor: this.state.color }}>{this.state.buttonText}</button>
       </nav>
+	    // for operation with dsa pass dsa object from state while calling customrecipe function
             </div>
         );
     }
