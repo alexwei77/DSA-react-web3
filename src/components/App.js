@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { Route ,Switch } from 'react-router-dom';
 import Home from './Home.js';
-import Customiser from './customiser.js';
+import customiser from './customiser.js';
 import "./App.css";
 
 class App extends Component {

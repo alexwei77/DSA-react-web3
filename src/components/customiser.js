@@ -14,34 +14,36 @@ import {
 const DSA = require("dsa-sdk");
 
 class App extends Component {
+    // Remaining
+    // 1. render input box for vault id
+    // 2. special drop down for swap eth-dai
+    // 3. make the dynamic array (sybol can be the option but for address will need to convert to lower case remove quotes and then get the address)
     constructor(props) {
         super(props);
         this.state = {
 			color: '#85f7ff',
 	        buttonText: "Connect",
 			name: "",
-            shareholders: [{ name: "" }]
+            shareholders: [{}],
 			
-			// UseCases That would be displayed to the user on the first screen
-            usecases: [
-                "Long Eth", "Short Dai", "Debt Swap", "Lending Swap"
-            ],
-			
-            // Usecase Mapping with the protocol options based on the usecase(NOTE -> We will include InstaPool as well for flash loans & so out of these the user can chose max upto two)
-            // Additionaly before executing the transaction we will have to do extra validation for eg if user wants to go long on eth then compound is a mandatory protocol and he can choses either oasis/oneInch
-            // NOTE -> For each Usecase it will be mandatory fot he user to choose exact 2
-            useCaseProtocolObject: {
-                "Long Eth": [
-                    "oneInch", "oasis", "compound", "aave"
-                ],
-                "Short Dai": [
-                    "oasis", "maker", "oneInch"
-                ],
-                "Debt Swap": [
-                    "oasis", "compound", "oneInch", "aave"
-                ],
-                "Lending Swap": ["oasis", "compound", "oneInch"]
+		    operationConfig:{
+                "borrow": ["compound", "aave", "maker"],
+                "deposit": ["compound", "aave", "maker"],
+                "payback": ["compound", "aave", "maker"],
+                "withdraw": ["compound", "aave", "maker"],
+                "openVault": ["compound", "aave", "maker"],
+                "swap": ["oasis", "oneInch", "kyber", "curve"],
+                "flashBorrow": ["instapool"],
+                "flashPayback": ["instapool"]
             },
+            operationSelected: "",
+            protocolSelected: "",
+            assetSelected: "",
+            buyingAssetSelected: "",
+            amountSelected: "",
+            vaultIdSelected: "",
+            isMaker: false,
+            isSwap: false,
             makerVaultOptions: {
                 "eth": "ETH-A",
                 "usdc": "USDC-A"
@@ -109,7 +111,7 @@ class App extends Component {
         // Setting DSA Instance
         await dsa.setInstance(existingDSAAddress[0].id);
         // for testing
-        let dai_address = dsa.tokens.info.dai.address;
+        let dai_address = dsa.to.kens.info.dai.address;
         let eth_address = dsa.tokens.info.eth.address;
         // Custom Array Sample
         this.customReciepeMaker([
@@ -294,8 +296,30 @@ class App extends Component {
         }
     }
 	
-	handleNameChange = evt => {
-    this.setState({ name: evt.target.value });
+	handleOperationChange = evt => {
+    this.setState({ operationSelected: evt.target.value });
+    if (evt.target.value === 'swap') this.setState({ isSwap: true })
+  };
+
+  	handleProtocolChange = evt => {
+    this.setState({ protocolSelected: evt.target.value });
+    if (evt.target.value === 'maker') this.setState({ isMaker: true })
+  };
+
+    handleAssetChange = evt => {
+    this.setState({ assetSelected: evt.target.value });
+  };
+
+  	handleBuyingAssetChange = evt => {
+    this.setState({ buyingAssetSelected: evt.target.value });
+  };
+
+ 	handleAmountChange = evt => {
+    this.setState({ amountSelected: evt.target.value });
+  };
+
+  	handleVaultIdChange = evt => {
+    this.setState({ vaultIdSelected: evt.target.value });
   };
 
   handleShareholderNameChange = idx => evt => {
@@ -308,13 +332,14 @@ class App extends Component {
   };
 
   handleSubmit = evt => {
-    const { name, shareholders } = this.state;
-    alert(`Incorporated: ${name} with ${shareholders.length} shareholders`);
+    console.log(this.state.shareholders)
+    // const { name, shareholders } = this.state;
+    // alert(`Incorporated: ${name} with ${shareholders.length} shareholders`);
   };
 
   handleAddShareholder = () => {
     this.setState({
-      shareholders: this.state.shareholders.concat([{ name: "" }])
+      shareholders: this.state.shareholders.concat([{}])
     });
   };
 
@@ -325,6 +350,29 @@ class App extends Component {
   };
 
     render() {
+        let operatorOptions = Object.keys(this.state.operationConfig).map((operation, index) =>
+                <option 
+                    key={operation.index}
+                    value={operation}
+                >
+                    {operation}
+                </option>
+        );
+        const protocolList = this.state.operationConfig[this.state.operationSelected]
+        let protocolOptions
+        if (!protocolList) {
+          protocolOptions = null
+        } else {
+         protocolOptions = this.state.operationConfig[this.state.operationSelected].map((protocol) => 
+         <option 
+                    key={protocol}
+                    value={protocol}
+                >
+                    {protocol}
+                </option>
+        )
+        }
+      
         return (
             <div>
                 <nav className="navbar navbar-dark fixed-top bg-dark flex-md-nowrap p-0 shadow">
@@ -340,22 +388,39 @@ class App extends Component {
 			 <form onSubmit={this.handleSubmit}>
         {this.state.shareholders.map((shareholder, idx) => (
           <div >
-            <select name="functions" id="functions">
-            <option value="swap">swap</option>
-            <option value="deposit">deposit</option>
-            <option value="withdraw">withdraw</option>
-            </select>
-            <select name="Protocols" id="Protocols">
-            <option value="compound">compound</option>
-            <option value="uniswap">uniswap</option>
-            <option value="aave">aave</option>
-            </select>
+            <select className="custom-search-select" onChange={this.handleOperationChange}>
+            <option>Select Operation</option>
+                {operatorOptions}
+           </select>
+
+            <select name="customSearch" className="custom-search-select" onChange={this.handleProtocolChange}>
+            <option>Select Protocol</option>
+                {protocolOptions}
+           </select>
+            <select className="custom-search-select" onChange={this.handleAssetChange}>
+            <option>Select Depositing Asset</option>
+            <option>ETH</option>
+            <option>DAI</option>
+            <option>USDC</option>
+           </select>
             <input
               type="text"
               placeholder={`amount`}
-              value={shareholder.name}
-              onChange={this.handleShareholderNameChange(idx)}
+              value={this.state.amountSelected}
+              onChange={this.handleAmountChange}
             />
+            {this.state.isSwap && <select className="custom-search-select" onChange={this.handleBuyingAssetChange}>
+            <option>Select Buying Asset</option>
+            <option>ETH</option>
+            <option>DAI</option>
+            <option>USDC</option>
+           </select>}
+             {this.state.isMaker && <input
+              type="text"
+              placeholder={`Vault Id`}
+              value={this.state.vaultIdSelected}
+              onChange={this.handleVaultIdChange}
+            />}
             <button
               type="button"
               onClick={this.handleRemoveShareholder(idx)}
@@ -372,10 +437,9 @@ class App extends Component {
         </button>
         <button>execute</button>
       </form>
-	  <div	
+	  </div>	
 			</div>
         );
     }
 }
 export default App;
-
