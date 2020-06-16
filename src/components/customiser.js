@@ -25,7 +25,7 @@ class App extends Component {
         deposit: ["compound", "aave", "maker"],
         payback: ["compound", "aave", "maker"],
         withdraw: ["compound", "aave", "maker"],
-        openVault: ["compound", "aave", "maker"],
+        openVault: ["maker"],
         swap: ["oasis", "oneInch", "kyber", "curve"],
         flashBorrow: ["instapool"],
         flashPayback: ["instapool"],
@@ -60,22 +60,10 @@ class App extends Component {
       await this.loadWeb3();
       await this.loadBlockchainData();
 
-      let result2 = await this.state.lendingpool.methods
-        .getUserAccountData("0x48c0d7f837fcad83e48e51e1563856fb1d898d01")
-        .call({ from: this.state.account });
-      console.log(result2);
-
-      let result1 = await this.state.lendingpool.methods
-        .getUserReserveData(
-          "0xf80A32A835F79D7787E8a8ee5721D0fEaFd78108",
-          "0x48c0d7f837fcad83e48e51e1563856fb1d898d01"
-        )
-        .call({ from: this.state.account });
-      console.log(result1);
-
       this.setState({ color: "#0ff279" });
       this.setState({ buttonText: "Connected" });
     } catch (err) {
+      console.log(err)
       this.setState({ color: "#85f7ff" });
       this.setState({ buttonText: "Tryagain" });
     }
@@ -229,6 +217,7 @@ class App extends Component {
               break;
 
             case "swap":
+              if (customProtocols[i].buyingTokenSymbol === customProtocols[i].sellingTokenSymbol) throw new Error("Cannot have both assets same");
               const slippage = 2;
               // to remove quotes
               const protocolInstance = customProtocols[i].protocol.replace(
@@ -477,7 +466,7 @@ class App extends Component {
                     <option>USDC</option>
                   </select>
                 )}
-                {shareholder.protocol == "maker" && (
+                {shareholder.protocol == "maker" && shareholder.name != "openVault" && (
                   <input
                     type="text"
                     placeholder={`Vault Id`}
