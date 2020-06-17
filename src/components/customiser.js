@@ -24,16 +24,16 @@ class App extends Component {
 
             operationConfig: {
                 borrow: [
-                    "compound", "aave", "maker"
+                    "compound", "aave", "maker", "dydx"
                 ],
                 deposit: [
-                    "compound", "aave", "maker"
+                    "compound", "aave", "maker", "dydx"
                 ],
                 payback: [
-                    "compound", "aave", "maker"
+                    "compound", "aave", "maker", "dydx"
                 ],
                 withdraw: [
-                    "compound", "aave", "maker"
+                    "compound", "aave", "maker", "dydx"
                 ],
                 openVault: ["maker"],
                 swap: [
@@ -46,11 +46,7 @@ class App extends Component {
             makerVaultOptions: {
                 ETH: "ETH-A",
                 USDC: "USDC-A"
-            },
-            lendingProtocols: [
-                "compound", "aave", "dydx"
-            ],
-            dexProtocols: ["oasis", "oneInch", "kyber", "curve"]
+            }
         };
     }
 
@@ -377,15 +373,24 @@ class App extends Component {
                                     shareholder.name && this.state.operationConfig[shareholder.name].map((protocol) => <option value={protocol}>
                                         {protocol}</option>)
                                 } </select>
-                                <select className="custom-search-select"
+                                {shareholder.protocol == "maker" && <select className="custom-search-select"
                                     onChange={
                                         this.handleAssetChange(idx)
                                 }>
                                     <option>Select Depositing Asset</option>
-                                    <option>ETH</option>
+                                    {shareholder.name != "openVault" && shareholder.name != "deposit" && shareholder.name != "withdraw" && <option>DAI</option>}
+                                    {shareholder.name != "payback" && shareholder.name != "borrow" && <option>ETH</option>}
+                                    {shareholder.name != "payback" && shareholder.name != "borrow" && <option>USDC</option>}
+                                </select>}
+                                {shareholder.protocol != "maker" && <select className="custom-search-select"
+                                    onChange={
+                                        this.handleAssetChange(idx)
+                                }>
+                                    <option>Select Depositing Asset</option>
                                     <option>DAI</option>
+                                    <option>ETH</option>
                                     <option>USDC</option>
-                                </select>
+                                </select>}
                                 <input type="text"
                                     placeholder={`amount`}
                                     onChange={
