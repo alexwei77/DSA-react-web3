@@ -53,6 +53,7 @@ export const makerGenericOperations = async (spells, method, vaultId, amount) =>
         method: method,
         args: [vaultId, amount, 0, 0]
     });
+    return spells;
 }
 
 export const getMaxAmount = async (web3) => {
