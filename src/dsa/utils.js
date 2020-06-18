@@ -42,6 +42,14 @@ export const swap = async (spells, protocol, buyAddress, sellAddress, knownAmoun
     return spells;
 };
 
+export const transferAsset = async (dsa, token, gasPrice) => {
+  return await dsa.transfer({
+  "token": token, // the token key to transfer
+  "amount": dsa.tokens.fromDecimal(1, token), // this helper changes the amount to decimal value
+  "gasPrice": gasPrice // estimate gas price*
+})
+}
+
 export const openMakerVault = async (spells, collateral) => { // Types ETH-A, BAT-A, USDC-A
     await spells.add({connector: "maker", method: "open", args: [collateral]});
     return spells
@@ -55,9 +63,4 @@ export const makerGenericOperations = async (spells, method, vaultId, amount) =>
     });
     return spells;
 }
-
-export const getMaxAmount = async (web3) => {
-    const BN = await web3.utils.BN;
-    return new BN("115792089237316195423570985008687907853269984665640564039457584007913129639935");
-};
 
