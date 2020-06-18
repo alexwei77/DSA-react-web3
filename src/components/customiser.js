@@ -5,7 +5,6 @@ import {
     flashPayback,
     genericDSAOperations,
     swap,
-    getMaxAmount,
     openMakerVault,
     makerGenericOperations
 } from "../dsa/utils";
@@ -103,9 +102,9 @@ class App extends Component {
         // Custom Array Sample
         this.customReciepeMaker([
             {
-                name: "openVault",
-                protocol: "maker",
-                sellingTokenSymbol: "ETH"
+                name: "deposit",
+                protocol: "aave",
+                asset: dai_address
             }, {
                 name: "swap",
                 protocol: "oasis",
@@ -137,7 +136,7 @@ class App extends Component {
 
                         case "deposit":
                             if (!customProtocols[i].amount) 
-                                spells = await genericDSAOperations(spells, customProtocols[i].protocol, "deposit", customProtocols[i].asset, await getMaxAmount(web3));
+                                spells = await genericDSAOperations(spells, customProtocols[i].protocol, "deposit", customProtocols[i].asset, "-1");
                              else 
                                 spells = await genericDSAOperations(spells, customProtocols[i].protocol, "deposit", customProtocols[i].asset, customProtocols[i].amount);
                             
@@ -155,7 +154,7 @@ class App extends Component {
 
                         case "payback":
                             if (!customProtocols[i].amount) 
-                                spells = await genericDSAOperations(spells, customProtocols[i].protocol, "payback", customProtocols[i].asset, await getMaxAmount(web3));
+                                spells = await genericDSAOperations(spells, customProtocols[i].protocol, "payback", customProtocols[i].asset, "-1");
                              else 
                                 spells = await genericDSAOperations(spells, customProtocols[i].protocol, "payback", customProtocols[i].asset, customProtocols[i].amount);
                             
@@ -197,44 +196,30 @@ class App extends Component {
                 } else {
                     switch (customProtocols[i].name) {
                         case "openVault":
-                            console.log(this.state.makerVaultOptions[customProtocols[i].sellingTokenSymbol])
-
                             spells = await openMakerVault(spells, this.state.makerVaultOptions[customProtocols[i].sellingTokenSymbol]);
                             break;
 
                         case "deposit":
                             if (!customProtocols[i].vaultId) 
                                 customProtocols[i].vaultId = 0
-
-                            
-
                             spells = await makerGenericOperations(spells, "deposit", customProtocols[i].vaultId, customProtocols[i].amount);
                             break;
 
                         case "borrow":
                             if (!customProtocols[i].vaultId) 
                                 customProtocols[i].vaultId = 0
-
-                            
-
                             spells = await makerGenericOperations(spells, "borrow", customProtocols[i].vaultId, customProtocols[i].amount);
                             break;
 
                         case "payback":
                             if (!customProtocols[i].vaultId) 
                                 customProtocols[i].vaultId = 0
-
-                            
-
                             spells = await makerGenericOperations(spells, "payback", customProtocols[i].vaultId, customProtocols[i].amount);
                             break;
 
                         case "withdraw":
                             if (!customProtocols[i].vaultId) 
                                 customProtocols[i].vaultId = 0
-
-                            
-
                             spells = await makerGenericOperations(spells, "withdraw", customProtocols[i].vaultId, customProtocols[i].amount);
                             break;
 
@@ -282,7 +267,7 @@ class App extends Component {
 
     handleAmountChange = (idx) => (evt) => {
         if (this.state.regexp.test(evt.target.value)) {
-            this.state.shareholders[idx].amount = evt.target.value;
+            this.state.shareholders[idx].amount = this.state.web3.utils.toWei(evt.target.value, 'ether');
             this.setState({shareholders: this.state.shareholders});
         } else 
             throw new Error("Amount must be a number!");
