@@ -1,5 +1,5 @@
-@import url("https://fonts.googleapis.com/css?family=Kanit:100,200,300,400,500");
 @import url('https://fonts.googleapis.com/css?family=Rubik:700&display=swap');
+
 @import url("https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css");
 
 html {
@@ -26,6 +26,29 @@ html {
     font-family: 'Rubik', sans-serif;
     font-size: 20px;
     line-height: 30px;
+}
+
+.container1 {
+	border:1px #ccc solid;
+	padding:10px;
+	display:flex;
+}
+
+.box1 {
+	border:1px #ccc solid;
+	flex:1;
+}
+.box2 {
+	border:1px #ccc solid;
+	flex:2;
+}
+
+.box3 {
+	border:1px #ccc solid;
+}
+.box4 {
+	border:1px #ccc solid;
+	flex:3;
 }
 
 .content {
@@ -132,3 +155,75 @@ html {
   border-bottom: 2px solid #eee;
 }
 
+.card {
+  background: #fff;
+  border-radius: 2px;
+  display: inline-block;
+  margin: 1rem;
+  position: relative;
+  height: 250px;
+  width: 350px;
+  border-radius: 10px;
+}
+
+.card-3 {
+  box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+}
+.card-4 {
+  box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+}
+
+.animate
+{
+	transition: all 0.1s;
+	-webkit-transition: all 0.1s;
+}
+
+.action-button
+{
+	position: relative;
+	padding: 10px 40px;
+    margin: 0px 10px 10px 0px;
+    float: left;
+	border-radius: 10px;
+	font-family: 'Rubik', sans-serif;
+	font-size: 25px;
+	color: #FFF;
+	text-decoration: none;	
+}
+
+.blue
+{
+	background-color: #3498DB;
+	border-bottom: 5px solid #2980B9;
+	text-shadow: 0px -2px #2980B9;
+}
+
+.red
+{
+	background-color: #E74C3C;
+	border-bottom: 5px solid #BD3E31;
+	text-shadow: 0px -2px #BD3E31;
+}
+
+.green
+{
+	background-color: #82BF56;
+	border-bottom: 5px solid #669644;
+	text-shadow: 0px -2px #669644;
+}
+
+.yellow
+{
+	background-color: #F2CF66;
+	border: none;
+	border-bottom: 5px solid #D1B358;
+	text-shadow: 0px -2px #D1B358;
+}
+
+.action-button:active
+{
+	transform: translate(0px,5px);
+    -webkit-transform: translate(0px,5px);
+	border-bottom: 1px solid;
+}
