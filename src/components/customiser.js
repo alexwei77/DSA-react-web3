@@ -347,7 +347,7 @@ class App extends Component {
 				<div className="box3">
 				<select className="custom-search-select"
                                     >
-                                        <option>Select Buying Asset</option>
+                                        <option>Select Deposit Asset</option>
                                         <option>ETH</option>
                                         <option>DAI</option>
                                         <option>USDC</option>
@@ -361,13 +361,16 @@ class App extends Component {
 				<div className="box3">
 				<button type="button" 
                                >
-                                    Transfer
+                                    Deposit
                                 </button>
 				</div>
 				</div>
 				</div>
 				<div className="box4">
 				<div className="card card-4">
+				<div className="box3">
+				<h1>Resolvers</h1>
+				</div>
 				<div className="box3">
 				<button type="button" 
                                >
