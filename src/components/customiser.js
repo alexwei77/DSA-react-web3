@@ -8,7 +8,7 @@ import {
     openMakerVault,
     makerGenericOperations
 } from "../dsa/utils";
-
+import "./Customiser.css";
 const DSA = require("dsa-sdk");
 
 class App extends Component {
@@ -325,7 +325,7 @@ class App extends Component {
         return (
             <div>
                 <nav className="navbar navbar-dark fixed-top bg-dark flex-md-nowrap p-0 shadow">
-                    <div className="navbar-brand col-sm-3 col-md-2 mr-0">Custom</div>
+                    <div className="navbar-brand col-sm-3 col-md-2 mr-0">Dashboard</div>
                     <button onClick={
                             this.login
                         }
@@ -338,7 +338,62 @@ class App extends Component {
                 </nav>
                 // for operation with dsa pass dsa object from state while calling
                         customrecipe function //dropdown loader
-                <div>
+                <div id="container">
+				<div className="content">
+				<div className="container1">
+				<div className="box1">
+				<div className="box3">
+				<div className="card card-3">
+				<div className="box3">
+				<select className="custom-search-select"
+                                    >
+                                        <option>Select Deposit Asset</option>
+                                        <option>ETH</option>
+                                        <option>DAI</option>
+                                        <option>USDC</option>
+                                    </select>
+				</div> 
+				<div className="box3">
+				<input type="text"
+                                        placeholder={`amount`}
+                />
+				</div>
+				<div className="box3">
+				<button type="button" 
+                               >
+                                    Deposit
+                                </button>
+				</div>
+				</div>
+				</div>
+				<div className="box4">
+				<div className="card card-4">
+				<div className="box3">
+				<h1>Resolvers</h1>
+				</div>
+				<div className="box3">
+				<button type="button" 
+                               >
+                                    maker
+                                </button>
+				</div> 
+				<div className="box3">
+				<button type="button" 
+                               >
+                                    compound
+                                </button>
+				</div>
+				<div className="box3">
+				<button type="button" 
+                               >
+                                    dydx
+                                </button>
+				</div>
+				
+				</div>
+				</div>
+				</div>
+				<div className="box2">
                     <form> {
                         this.state.shareholders.map((shareholder, idx) => (
                             <div>
@@ -371,7 +426,7 @@ class App extends Component {
                                     onChange={
                                         this.handleAssetChange(idx)
                                 }>
-                                    <option>Select Depositing Asset</option>
+                                    <option>Select Asset</option>
                                     <option>DAI</option>
                                     <option>ETH</option>
                                     <option>USDC</option>
@@ -402,7 +457,7 @@ class App extends Component {
                                         }/>
                                 )
                             }
-                                <button type="button"
+                                <button type="button" 
                                     onClick={
                                         this.handleRemoveShareholder(idx)
                                 }>
@@ -411,18 +466,21 @@ class App extends Component {
                             </div>
                         ))
                     }
-                        <button type="button"
+                        <button type="button" className="action-button shadow animate yellow"
                             onClick={
                                 this.handleAddShareholder
                         }>
                             Add
                         </button>
-                        <button onClick={
+                        <button type="button" className="action-button shadow animate yellow" onClick={
                             this.handleSubmit
                         }>execute</button>
                     </form>
+					</div>
+				</div>
                 </div>
             </div>
+		</div>
         );
     }
 }
