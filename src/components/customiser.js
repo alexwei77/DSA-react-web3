@@ -11,6 +11,11 @@ import {
   makerGenericOperations,
   transferAsset,
 } from "../dsa/utils";
+import {
+  genericResolver,
+  makerVaultResolver,
+  makerDSRResolver,
+} from "../dsa/resolvers";
 import "./Customiser.css";
 const DSA = require("dsa-sdk");
 
@@ -22,9 +27,12 @@ class App extends Component {
       buttonText: "Connect",
       showError: false,
       showWarning: false,
+      showSuccess: false,
+      showResolver: false,
       errMessage: "",
+      successMessage: "",
+      resolverData: {},
       shareholders: [{}],
-
       operationConfig: {
         borrow: ["compound", "aave", "maker", "dydx"],
         deposit: ["compound", "aave", "maker", "dydx"],
@@ -96,6 +104,7 @@ class App extends Component {
       "0xf88b0247e611eE5af8Cf98f5303769Cba8e7177C"
     );
     console.log(existingDSAAddress);
+    this.setState({dsaAddress: existingDSAAddress[0].address})
     // Setting DSA Instance
     await dsa.setInstance(existingDSAAddress[0].id);
     // for testing
@@ -439,13 +448,34 @@ class App extends Component {
     try {
       evt.preventDefault();
       const gasPrice = this.state.web3.utils.toWei("1", "gwei");
-      await transferAsset(
+      const result = await transferAsset(
         this.state.dsa,
         this.state.transferAssetSymbol,
         this.state.depositAmount,
         gasPrice
       );
+      // for testing will change it soon
+      this.setState({ successMessage: "https://etherscan.io/tx/0x339f49901ce8a59f739399e5746fd563902949852e40b1b3990525061216d209", tx: result });
+      this.showSuccessModal(evt);
     } catch (err) {
+      this.setState({ errMessage: "Transaction Failed" });
+      this.showErrorModal(evt);
+    }
+  };
+
+  getUserPosition = (protocol) => async (evt) => {
+    try {
+      evt.preventDefault();
+      const positionData = await genericResolver(this.state.dsa, protocol, this.state.dsaAddress)
+      const filteredData = {}
+      filteredData["eth"] = positionData["eth"]
+      filteredData["dai"] = positionData["dai"]
+      filteredData["usdc"] = positionData["usdc"]
+      
+      this.setState({ resolverData: filteredData})
+      this.showResolverModal(evt);
+    } catch (err) {
+      console.log(err)
       this.setState({ errMessage: "Transaction Failed" });
       this.showErrorModal(evt);
     }
@@ -459,7 +489,7 @@ class App extends Component {
 
   handleRemoveShareholder = (idx) => () => {
     this.setState({
-      shareholders: this.state.shareholders.filter((s, sidx) => idx !== sidx),
+      shareholders: this.state.shareholders.filter((s, sidx) => idx !== sidx), 
     });
   };
 
@@ -487,6 +517,30 @@ class App extends Component {
     });
   };
 
+  showSuccessModal = (e) => {
+    this.setState({
+      showSuccess: true
+    });
+  };
+
+  hideSuccessModal = (e) => {
+    this.setState({
+      showSuccess: false
+    });
+  };
+
+  showResolverModal = (e) => {
+    this.setState({
+      showResolver: true
+    });
+  };
+
+  hideResolverModal = (e) => {
+    this.setState({
+      showResolver: false
+    });
+  };
+  
   render() {
     let operatorOptions = Object.keys(this.state.operationConfig).map(
       (operation, index) => (
@@ -528,6 +582,24 @@ class App extends Component {
               <div className="box1">
                 <div className="box3">
                   <div className="card card-3">
+                   <Modal show={this.state.showResolver} onHide={this.hideResolverModal}>
+                      <Modal.Header>
+                        <Modal.Title>Your Position</Modal.Title>
+                      </Modal.Header>
+                      <Modal.Body>{JSON.stringify(this.state.resolverData)}</Modal.Body>
+                      <Modal.Footer>
+                        <button onClick={this.hideResolverModal}>Cancel</button>
+                      </Modal.Footer>{" "}
+                    </Modal>
+                      <Modal show={this.state.showSuccess} onHide={this.hideSuccessModal}>
+                      <Modal.Header>
+                        <Modal.Title>Successful Transaction</Modal.Title>
+                      </Modal.Header>
+                      <Modal.Body><a href = {this.state.successMessage}>{this.state.tx}</a></Modal.Body>
+                      <Modal.Footer>
+                        <button onClick={this.hideSuccessModal}>Cancel</button>
+                      </Modal.Footer>{" "}
+                    </Modal>
                     <Modal show={this.state.showWarning} onHide={this.hideWarningModal}>
                       <Modal.Header>
                         <Modal.Title>Warning</Modal.Title>
@@ -583,10 +655,13 @@ class App extends Component {
                       <button type="button">maker</button>
                     </div>
                     <div className="box3">
-                      <button type="button">compound</button>
+                      <button type="button" onClick={this.getUserPosition("compound")}>compound</button>
                     </div>
                     <div className="box3">
-                      <button type="button">dydx</button>
+                      <button type="button" onClick={this.getUserPosition("dydx")}>dydx</button>
+                    </div>
+                     <div className="box3">
+                      <button type="button" onClick={this.getUserPosition("aave")}>aave</button>
                     </div>
                   </div>
                 </div>
