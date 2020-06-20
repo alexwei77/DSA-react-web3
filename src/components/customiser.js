@@ -471,11 +471,14 @@ class App extends Component {
       filteredData["eth"] = positionData["eth"]
       filteredData["dai"] = positionData["dai"]
       filteredData["usdc"] = positionData["usdc"]
-      
+      filteredData["liquidation"] = positionData["liquidation"]
+      filteredData["status"] = positionData["status"]
+      filteredData["totalBorrowInEth"] = positionData["totalBorrowInEth"]
+      filteredData["totalSupplyInEth"] = positionData["totalSupplyInEth"]
+
       this.setState({ resolverData: filteredData})
       this.showResolverModal(evt);
     } catch (err) {
-      console.log(err)
       this.setState({ errMessage: "Transaction Failed" });
       this.showErrorModal(evt);
     }
@@ -542,6 +545,8 @@ class App extends Component {
   };
   
   render() {
+    const resolverNonObjectOptions = ["liquidation", "status", "totalBorrowInEth", "totalSupplyInEth"]
+    const userRelatedResolverOptions =  ["supply", "borrow"]
     let operatorOptions = Object.keys(this.state.operationConfig).map(
       (operation, index) => (
         <option key={operation.index} value={operation}>
@@ -586,7 +591,7 @@ class App extends Component {
                       <Modal.Header>
                         <Modal.Title>Your Position</Modal.Title>
                       </Modal.Header>
-                      <Modal.Body>{JSON.stringify(this.state.resolverData)}</Modal.Body>
+                      {Object.keys(this.state.resolverData).map(asset => !resolverNonObjectOptions.includes(asset) ? <Modal.Body><b>{asset}</b>  {Object.keys(this.state.resolverData[asset]).map(info => userRelatedResolverOptions.includes(info) ? (<p>{info} => {this.state.resolverData[asset][info]}</p>) : <p></p>)} </Modal.Body> : <Modal.Body><b>{asset}</b> => {this.state.resolverData[asset]}</Modal.Body>)}
                       <Modal.Footer>
                         <button onClick={this.hideResolverModal}>Cancel</button>
                       </Modal.Footer>{" "}
