@@ -29,6 +29,7 @@ class App extends Component {
       showWarning: false,
       showSuccess: false,
       showResolver: false,
+      showMakerResolver: false,
       errMessage: "",
       successMessage: "",
       resolverData: {},
@@ -52,7 +53,7 @@ class App extends Component {
   }
 
   async componentWillMount() {
-    this.showWarningModal()
+    this.showWarningModal();
   }
   async loadWeb3() {
     if (window.ethereum) {
@@ -104,7 +105,7 @@ class App extends Component {
       "0xf88b0247e611eE5af8Cf98f5303769Cba8e7177C"
     );
     console.log(existingDSAAddress);
-    this.setState({dsaAddress: existingDSAAddress[0].address})
+    this.setState({ dsaAddress: existingDSAAddress[0].address });
     // Setting DSA Instance
     await dsa.setInstance(existingDSAAddress[0].id);
     // for testing
@@ -455,7 +456,11 @@ class App extends Component {
         gasPrice
       );
       // for testing will change it soon
-      this.setState({ successMessage: "https://etherscan.io/tx/0x339f49901ce8a59f739399e5746fd563902949852e40b1b3990525061216d209", tx: result });
+      this.setState({
+        successMessage:
+          "https://etherscan.io/tx/0x339f49901ce8a59f739399e5746fd563902949852e40b1b3990525061216d209",
+        tx: result,
+      });
       this.showSuccessModal(evt);
     } catch (err) {
       this.setState({ errMessage: "Transaction Failed" });
@@ -466,20 +471,42 @@ class App extends Component {
   getUserPosition = (protocol) => async (evt) => {
     try {
       evt.preventDefault();
-      const positionData = await genericResolver(this.state.dsa, protocol, this.state.dsaAddress)
-      const filteredData = {}
-      filteredData["eth"] = positionData["eth"]
-      filteredData["dai"] = positionData["dai"]
-      filteredData["usdc"] = positionData["usdc"]
-      filteredData["liquidation"] = positionData["liquidation"]
-      filteredData["status"] = positionData["status"]
-      filteredData["totalBorrowInEth"] = positionData["totalBorrowInEth"]
-      filteredData["totalSupplyInEth"] = positionData["totalSupplyInEth"]
+      const positionData = await genericResolver(
+        this.state.dsa,
+        protocol,
+        this.state.dsaAddress
+      );
+      const filteredData = {};
+      filteredData["eth"] = positionData["eth"];
+      filteredData["dai"] = positionData["dai"];
+      filteredData["usdc"] = positionData["usdc"];
+      filteredData["liquidation"] = positionData["liquidation"];
+      filteredData["status"] = positionData["status"];
+      filteredData["totalBorrowInEth"] = positionData["totalBorrowInEth"];
+      filteredData["totalSupplyInEth"] = positionData["totalSupplyInEth"];
 
-      this.setState({ resolverData: filteredData})
+      this.setState({ resolverData: filteredData });
       this.showResolverModal(evt);
     } catch (err) {
-      this.setState({ errMessage: "Transaction Failed" });
+      this.setState({ errMessage: "Please Connect your Wallet" });
+      this.showErrorModal(evt);
+    }
+  };
+
+  getUserMakerPosition = async () => {
+    try {
+      const vaultStats = await makerVaultResolver(
+        this.state.dsa,
+        this.state.dsaAddress
+      );
+      const dsrStats = await makerDSRResolver(
+        this.state.dsa,
+        this.state.dsaAddress
+      );
+      this.setState({ vaultStats, dsrStats });
+      this.showMakerResolver(evt);
+    } catch (err) {
+      this.setState({ errMessage: "Please Connect your Wallet" });
       this.showErrorModal(evt);
     }
   };
@@ -492,61 +519,78 @@ class App extends Component {
 
   handleRemoveShareholder = (idx) => () => {
     this.setState({
-      shareholders: this.state.shareholders.filter((s, sidx) => idx !== sidx), 
+      shareholders: this.state.shareholders.filter((s, sidx) => idx !== sidx),
     });
   };
 
   showErrorModal = (e) => {
     this.setState({
-      showError: true
+      showError: true,
     });
   };
 
   hideErrorModal = (e) => {
     this.setState({
-      showError: false
+      showError: false,
     });
   };
 
-   showWarningModal = (e) => {
+  showWarningModal = (e) => {
     this.setState({
-      showWarning: true
+      showWarning: true,
     });
   };
 
   hideWarningModal = (e) => {
     this.setState({
-      showWarning: false
+      showWarning: false,
     });
   };
 
   showSuccessModal = (e) => {
     this.setState({
-      showSuccess: true
+      showSuccess: true,
     });
   };
 
   hideSuccessModal = (e) => {
     this.setState({
-      showSuccess: false
+      showSuccess: false,
     });
   };
 
   showResolverModal = (e) => {
     this.setState({
-      showResolver: true
+      showResolver: true,
     });
   };
 
   hideResolverModal = (e) => {
     this.setState({
-      showResolver: false
+      showResolver: false,
     });
   };
-  
+
+  showMakerResolverModal = (e) => {
+    this.setState({
+      showMakerResolver: true,
+    });
+  };
+
+  hideMakerResolverModal = (e) => {
+    this.setState({
+      showMakerResolver: false,
+    });
+  };
+
   render() {
-    const resolverNonObjectOptions = ["liquidation", "status", "totalBorrowInEth", "totalSupplyInEth"]
-    const userRelatedResolverOptions =  ["supply", "borrow"]
+    const resolverNonObjectOptions = [
+      "liquidation",
+      "status",
+      "totalBorrowInEth",
+      "totalSupplyInEth",
+    ];
+    const userRelatedResolverOptions = ["supply", "borrow"];
     let operatorOptions = Object.keys(this.state.operationConfig).map(
       (operation, index) => (
         <option key={operation.index} value={operation}>
@@ -587,35 +631,90 @@ class App extends Component {
               <div className="box1">
                 <div className="box3">
                   <div className="card card-3">
-                   <Modal show={this.state.showResolver} onHide={this.hideResolverModal}>
+                    <Modal
+                      show={this.state.showMakerResolver}
+                      onHide={this.hideMakerResolverModal}
+                    >
+                      <Modal.Header>
+                        <Modal.Title>Your Maker Positions</Modal.Title>
+                      </Modal.Header>
+                      <Modal.Body></Modal.Body>
+                      <Modal.Footer>
+                        <button onClick={this.hideMakerResolverModal}>
+                          Cancel
+                        </button>
+                      </Modal.Footer>{" "}
+                    </Modal>
+                    <Modal
+                      show={this.state.showResolver}
+                      onHide={this.hideResolverModal}
+                    >
                       <Modal.Header>
                         <Modal.Title>Your Position</Modal.Title>
                       </Modal.Header>
-                      {Object.keys(this.state.resolverData).map(asset => !resolverNonObjectOptions.includes(asset) ? <Modal.Body><b>{asset}</b>  {Object.keys(this.state.resolverData[asset]).map(info => userRelatedResolverOptions.includes(info) ? (<p>{info} => {this.state.resolverData[asset][info]}</p>) : <p></p>)} </Modal.Body> : <Modal.Body><b>{asset}</b> => {this.state.resolverData[asset]}</Modal.Body>)}
+                      {Object.keys(this.state.resolverData).map((asset) =>
+                        !resolverNonObjectOptions.includes(asset) ? (
+                          <Modal.Body>
+                            <b>{asset}</b>{" "}
+                            {Object.keys(this.state.resolverData[asset]).map(
+                              (info) =>
+                                userRelatedResolverOptions.includes(info) ? (
+                                  <p>
+                                    {info} =>{" "}
+                                    {this.state.resolverData[asset][info]}
+                                  </p>
+                                ) : (
+                                  <p></p>
+                                )
+                            )}{" "}
+                          </Modal.Body>
+                        ) : (
+                          <Modal.Body>
+                            <b>{asset}</b> => {this.state.resolverData[asset]}
+                          </Modal.Body>
+                        )
+                      )}
                       <Modal.Footer>
                         <button onClick={this.hideResolverModal}>Cancel</button>
                       </Modal.Footer>{" "}
                     </Modal>
-                      <Modal show={this.state.showSuccess} onHide={this.hideSuccessModal}>
+                    <Modal
+                      show={this.state.showSuccess}
+                      onHide={this.hideSuccessModal}
+                    >
                       <Modal.Header>
                         <Modal.Title>Successful Transaction</Modal.Title>
                       </Modal.Header>
-                      <Modal.Body><a href = {this.state.successMessage}>{this.state.tx}</a></Modal.Body>
+                      <Modal.Body>
+                        <a href={this.state.successMessage}>{this.state.tx}</a>
+                      </Modal.Body>
                       <Modal.Footer>
                         <button onClick={this.hideSuccessModal}>Cancel</button>
                       </Modal.Footer>{" "}
                     </Modal>
-                    <Modal show={this.state.showWarning} onHide={this.hideWarningModal}>
+                    <Modal
+                      show={this.state.showWarning}
+                      onHide={this.hideWarningModal}
+                    >
                       <Modal.Header>
                         <Modal.Title>Warning</Modal.Title>
                       </Modal.Header>
-                      <Modal.Body>Before creating your recipies make sure sure to Connect to your Wallet</Modal.Body>
-                      <Modal.Body>Make Sure the Asset that you will be using in your spells is available in your dsa, if not you can transfer</Modal.Body>
+                      <Modal.Body>
+                        Before creating your recipies make sure sure to Connect
+                        to your Wallet
+                      </Modal.Body>
+                      <Modal.Body>
+                        Make Sure the Asset that you will be using in your
+                        spells is available in your dsa, if not you can transfer
+                      </Modal.Body>
                       <Modal.Footer>
                         <button onClick={this.hideWarningModal}>Cancel</button>
                       </Modal.Footer>{" "}
                     </Modal>
-                    <Modal show={this.state.showError} onHide={this.hideErrorModal}>
+                    <Modal
+                      show={this.state.showError}
+                      onHide={this.hideErrorModal}
+                    >
                       <Modal.Header>
                         <Modal.Title>Error</Modal.Title>
                       </Modal.Header>
@@ -657,16 +756,33 @@ class App extends Component {
                       <h1>Resolvers</h1>
                     </div>
                     <div className="box3">
-                      <button type="button">maker</button>
+                      <button type="button" onClick={this.getUserMakerPosition}>
+                        maker
+                      </button>
                     </div>
                     <div className="box3">
-                      <button type="button" onClick={this.getUserPosition("compound")}>compound</button>
+                      <button
+                        type="button"
+                        onClick={this.getUserPosition("compound")}
+                      >
+                        compound
+                      </button>
                     </div>
                     <div className="box3">
-                      <button type="button" onClick={this.getUserPosition("dydx")}>dydx</button>
+                      <button
+                        type="button"
+                        onClick={this.getUserPosition("dydx")}
+                      >
+                        dydx
+                      </button>
                     </div>
-                     <div className="box3">
-                      <button type="button" onClick={this.getUserPosition("aave")}>aave</button>
+                    <div className="box3">
+                      <button
+                        type="button"
+                        onClick={this.getUserPosition("aave")}
+                      >
+                        aave
+                      </button>
                     </div>
                   </div>
                 </div>
