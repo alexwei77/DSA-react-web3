@@ -325,6 +325,7 @@ class App extends Component {
       var data = {
         spells: spells,
       };
+      console.log(spells)
       // For Simulation Testing on tenderly
       var gasLimit = await dsa.estimateCastGas(data).catch((err) => {
         this.setState({
@@ -486,10 +487,10 @@ class App extends Component {
       filteredData["totalSupplyInEth"] = positionData["totalSupplyInEth"];
 
       this.setState({ resolverData: filteredData });
-      this.showResolverModal(evt);
+      this.showResolverModal();
     } catch (err) {
       this.setState({ errMessage: "Please Connect your Wallet" });
-      this.showErrorModal(evt);
+      this.showErrorModal();
     }
   };
 
@@ -504,10 +505,10 @@ class App extends Component {
         this.state.dsaAddress
       );
       this.setState({ vaultStats, dsrStats });
-      this.showMakerResolver(evt);
+      this.showMakerResolver();
     } catch (err) {
       this.setState({ errMessage: "Please Connect your Wallet" });
-      this.showErrorModal(evt);
+      this.showErrorModal();
     }
   };
 
