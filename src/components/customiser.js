@@ -33,6 +33,8 @@ class App extends Component {
       errMessage: "",
       successMessage: "",
       resolverData: {},
+      vaultStats: {},
+      dsrStats: {},
       shareholders: [{}],
       operationConfig: {
         borrow: ["compound", "aave", "maker", "dydx"],
@@ -325,7 +327,7 @@ class App extends Component {
       var data = {
         spells: spells,
       };
-      console.log(spells)
+      console.log(spells);
       // For Simulation Testing on tenderly
       var gasLimit = await dsa.estimateCastGas(data).catch((err) => {
         this.setState({
@@ -496,7 +498,7 @@ class App extends Component {
 
   getUserMakerPosition = async () => {
     try {
-      const vaultStats = await makerVaultResolver(
+      let vaultStats = await makerVaultResolver(
         this.state.dsa,
         this.state.dsaAddress
       );
@@ -505,8 +507,9 @@ class App extends Component {
         this.state.dsaAddress
       );
       this.setState({ vaultStats, dsrStats });
-      this.showMakerResolver();
+      this.showMakerResolverModal();
     } catch (err) {
+      console.log(err);
       this.setState({ errMessage: "Please Connect your Wallet" });
       this.showErrorModal();
     }
@@ -636,10 +639,28 @@ class App extends Component {
                       show={this.state.showMakerResolver}
                       onHide={this.hideMakerResolverModal}
                     >
-                      <Modal.Header>
-                        <Modal.Title>Your Maker Positions</Modal.Title>
-                      </Modal.Header>
-                      <Modal.Body></Modal.Body>
+                      <Modal.Title>Your Vault Positions</Modal.Title>
+                      {Object.keys(this.state.vaultStats).map((vault) => (
+                        <Modal.Body>
+                          <b>{vault}</b>{" "}
+                          {Object.keys(this.state.vaultStats[vault]).map(
+                            (info) => (
+                              <p>
+                                {" "}
+                                {info} => {this.state.vaultStats[vault][info]}
+                              </p>
+                            )
+                          )}{" "}
+                        </Modal.Body>
+                      ))}
+                      <br></br>
+                      <Modal.Title>Your DSR Position</Modal.Title>
+                      {Object.keys(this.state.dsrStats).map((properties) => (
+                        <Modal.Body>
+                          <b>{properties}</b> =>{" "}
+                          {this.state.dsrStats[properties]}
+                        </Modal.Body>
+                      ))}
                       <Modal.Footer>
                         <button onClick={this.hideMakerResolverModal}>
                           Cancel
