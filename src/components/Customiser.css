@@ -348,7 +348,7 @@ input {
   color: #fff;
   margin: 5px 5px 5px 5px;
   padding: 0.5em 0.5em;
-  border-radius: 0.5em;
+  border-radius: 10px;
   border:none;
   outline:none;
   transition: all 0.1s ease-out;
@@ -362,6 +362,7 @@ input:focus {
   border-bottom: 0.25em solid #0f5177;
   top:-2px;
 }
+
 .custom-select {
   position : relative;
   width: 100%;
@@ -374,11 +375,12 @@ input:focus {
   display: block;
 }
 .select {
-  width: 100%;
+  width: 87%;
   position: absolute;
   top: 0;
   height: 4em;
   opacity: 0;
+  padding: 1em;
   -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
   background: none transparent;
   border: 0 none;
@@ -402,7 +404,7 @@ input:focus {
 }
 .select-1 {
    background: #21cf8f;
-  border-bottom: .25em darken(#21cf8f, 10);
+  border-bottom: .25em solid darken(#21cf8f, 10);
   &:after {
      border-color: darken(#21cf8f, 10);
   }
