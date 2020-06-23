@@ -1,326 +1,622 @@
-import React, {Component} from "react";
+import React, { Component } from "react";
 import Web3 from "web3";
+import Modal from "react-bootstrap/Modal";
+import "bootstrap/dist/css/bootstrap.min.css";
 import {
-    flashBorrow,
-    flashPayback,
-    genericDSAOperations,
-    swap,
-    openMakerVault,
-    makerGenericOperations
+  flashBorrow,
+  flashPayback,
+  genericDSAOperations,
+  swap,
+  openMakerVault,
+  makerGenericOperations,
+  transferAsset,
 } from "../dsa/utils";
+import {
+  genericResolver,
+  makerVaultResolver,
+  makerDSRResolver,
+} from "../dsa/resolvers";
 import "./Customiser.css";
 const DSA = require("dsa-sdk");
 
 class App extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            color: "#85f7ff",
-            buttonText: "Connect",
-            shareholders: [
-                {}
-            ],
+  constructor(props) {
+    super(props);
+    this.state = {
+      color: "#85f7ff",
+      buttonText: "Connect",
+      showError: false,
+      showWarning: false,
+      showSuccess: false,
+      showResolver: false,
+      showMakerResolver: false,
+      errMessage: "",
+      successMessage: "",
+      resolverData: {},
+      vaultStats: {},
+      dsrStats: {},
+      shareholders: [{}],
+      operationConfig: {
+        borrow: ["compound", "aave", "maker", "dydx"],
+        deposit: ["compound", "aave", "maker", "dydx"],
+        payback: ["compound", "aave", "maker", "dydx"],
+        withdraw: ["compound", "aave", "maker", "dydx"],
+        openVault: ["maker"],
+        swap: ["oasis", "oneInch", "kyber", "curve"],
+        flashBorrow: ["instapool"],
+        flashPayback: ["instapool"],
+      },
+      regexp: /^[0-9\b]+$/,
+      makerVaultOptions: {
+        ETH: "ETH-A",
+        USDC: "USDC-A",
+      },
+    };
+  }
 
-            operationConfig: {
-                borrow: [
-                    "compound", "aave", "maker", "dydx"
-                ],
-                deposit: [
-                    "compound", "aave", "maker", "dydx"
-                ],
-                payback: [
-                    "compound", "aave", "maker", "dydx"
-                ],
-                withdraw: [
-                    "compound", "aave", "maker", "dydx"
-                ],
-                openVault: ["maker"],
-                swap: [
-                    "oasis", "oneInch", "kyber", "curve"
-                ],
-                flashBorrow: ["instapool"],
-                flashPayback: ["instapool"]
-            },
-            regexp: /^[0-9\b]+$/,
-            makerVaultOptions: {
-                ETH: "ETH-A",
-                USDC: "USDC-A"
-            }
-        };
+  async componentWillMount() {
+    this.showWarningModal();
+  }
+  async loadWeb3() {
+    if (window.ethereum) {
+      const web3 = new Web3(window.ethereum);
+      await window.ethereum.enable();
+      this.setState({ web3 });
+    } else if (window.web3) {
+      const web3 = new Web3(window.web3.currentProvider);
+      this.setState({ web3 });
+    } else {
+      window.alert(
+        "Non-Ethereum browser detected. You should consider trying MetaMask!"
+      );
     }
+  }
 
-    async loadWeb3() {
-        if (window.ethereum) {
-            const web3 = new Web3(window.ethereum);
-            await window.ethereum.enable();
-            this.setState({web3});
-        } else if (window.web3) {
-            const web3 = new Web3(window.web3.currentProvider);
-            this.setState({web3});
+  login = async () => {
+    try {
+      await this.loadWeb3();
+      await this.loadBlockchainData();
+
+      this.setState({ color: "#0ff279" });
+      this.setState({ buttonText: "Connected" });
+    } catch (err) {
+      console.log(err);
+      this.setState({ color: "#85f7ff" });
+      this.setState({ buttonText: "Tryagain" });
+    }
+  };
+
+  async loadBlockchainData() {
+    // in browser with react
+    const accounts = await this.state.web3.eth.getAccounts();
+    this.setState({ account: accounts[0] });
+    console.log(this.state.account);
+    const dsa = new DSA(this.state.web3);
+    this.setState({ dsa });
+
+    // Getting Your DSA Address
+    var existingDSAAddress = await dsa.getAccounts(this.state.account);
+    console.log(existingDSAAddress);
+    if (existingDSAAddress.length === 0) {
+      var newDsaAddress = await dsa.build({
+        gasPrice: this.state.web3.utils.toWei("29", "gwei"),
+      });
+    }
+    // change to this.state.account does this requires address as string?
+    existingDSAAddress = await dsa.getAccounts(
+      "0xf88b0247e611eE5af8Cf98f5303769Cba8e7177C"
+    );
+    console.log(existingDSAAddress);
+    this.setState({ dsaAddress: existingDSAAddress[0].address });
+    // Setting DSA Instance
+    await dsa.setInstance(existingDSAAddress[0].id);
+    // for testing
+    let dai_address = dsa.tokens.info.dai.address;
+    let eth_address = dsa.tokens.info.eth.address;
+    // Custom Array Sample
+    this.customReciepeMaker(
+      [
+        {
+          name: "deposit",
+          protocol: "aave",
+          asset: dai_address,
+        },
+        {
+          name: "swap",
+          protocol: "oasis",
+          // selling token
+          asset: dai_address,
+          buyingTokenSymbol: "ETH",
+          sellingTokenSymbol: "DAI",
+          buyAddress: eth_address,
+          amount: 20,
+        },
+      ],
+      this.state.web3,
+      this.state.dsa
+    );
+  }
+
+  async customReciepeMaker(customProtocols, web3, dsa) {
+    try {
+      let spells = await dsa.Spell();
+      for (let i = 0; i < customProtocols.length; i++) {
+        if (customProtocols[i].protocol != "maker") {
+          // since the spell structure for maker connectors is different from others
+          switch (customProtocols[i].name) {
+            case "borrow":
+              if (!customProtocols[i].amount)
+                throw new Error("Amount Mandatory for Borrow");
+              else
+                spells = await genericDSAOperations(
+                  spells,
+                  customProtocols[i].protocol,
+                  "borrow",
+                  customProtocols[i].asset,
+                  customProtocols[i].amount
+                );
+
+              break;
+
+            case "deposit":
+              if (!customProtocols[i].amount)
+                spells = await genericDSAOperations(
+                  spells,
+                  customProtocols[i].protocol,
+                  "deposit",
+                  customProtocols[i].asset,
+                  "-1"
+                );
+              else
+                spells = await genericDSAOperations(
+                  spells,
+                  customProtocols[i].protocol,
+                  "deposit",
+                  customProtocols[i].asset,
+                  customProtocols[i].amount
+                );
+
+              break;
+
+            case "withdraw":
+              if (!customProtocols[i].amount)
+                throw new Error("Amount Mandatory for Withdraw");
+              else
+                spells = await genericDSAOperations(
+                  spells,
+                  customProtocols[i].protocol,
+                  "withdraw",
+                  customProtocols[i].asset,
+                  customProtocols[i].amount
+                );
+
+              break;
+
+            case "payback":
+              if (!customProtocols[i].amount)
+                spells = await genericDSAOperations(
+                  spells,
+                  customProtocols[i].protocol,
+                  "payback",
+                  customProtocols[i].asset,
+                  "-1"
+                );
+              else
+                spells = await genericDSAOperations(
+                  spells,
+                  customProtocols[i].protocol,
+                  "payback",
+                  customProtocols[i].asset,
+                  customProtocols[i].amount
+                );
+
+              break;
+
+            case "flashBorrow":
+              if (!customProtocols[i].amount)
+                throw new Error("Amount Mandatory for Flash Borrow");
+              else
+                spells = await flashBorrow(
+                  spells,
+                  customProtocols[i].asset,
+                  customProtocols[i].amount
+                );
+
+              break;
+
+            case "flashPayback":
+              if (customProtocols[i].amount)
+                throw new Error("Amount Not Required for Flash Payback");
+              else
+                spells = await flashPayback(spells, customProtocols[i].asset);
+
+              break;
+
+            case "swap":
+              if (
+                customProtocols[i].buyingTokenSymbol ===
+                customProtocols[i].sellingTokenSymbol
+              )
+                throw new Error("Cannot have both assets same");
+
+              const slippage = 2;
+              // to remove quotes
+              const protocolInstance = customProtocols[i].protocol.replace(
+                /['"]+/g,
+                ""
+              );
+              const swapDetail = await dsa[protocolInstance].getBuyAmount(
+                customProtocols[i].buyingTokenSymbol,
+                customProtocols[i].sellingTokenSymbol,
+                customProtocols[i].amount,
+                slippage
+              );
+              spells = await swap(
+                spells,
+                customProtocols[i].protocol,
+                customProtocols[i].buyAddress,
+                customProtocols[i].asset,
+                customProtocols[i].amount,
+                swapDetail.unitAmt
+              );
+              break;
+
+            default:
+              throw new Error("Invalid Operation");
+          }
         } else {
-            window.alert("Non-Ethereum browser detected. You should consider trying MetaMask!");
+          switch (customProtocols[i].name) {
+            case "openVault":
+              spells = await openMakerVault(
+                spells,
+                this.state.makerVaultOptions[
+                  customProtocols[i].sellingTokenSymbol
+                ]
+              );
+              break;
+
+            case "deposit":
+              if (!customProtocols[i].vaultId) customProtocols[i].vaultId = 0;
+
+              spells = await makerGenericOperations(
+                spells,
+                "deposit",
+                customProtocols[i].vaultId,
+                customProtocols[i].amount
+              );
+              break;
+
+            case "borrow":
+              if (!customProtocols[i].vaultId) customProtocols[i].vaultId = 0;
+
+              spells = await makerGenericOperations(
+                spells,
+                "borrow",
+                customProtocols[i].vaultId,
+                customProtocols[i].amount
+              );
+              break;
+
+            case "payback":
+              if (!customProtocols[i].vaultId) customProtocols[i].vaultId = 0;
+
+              spells = await makerGenericOperations(
+                spells,
+                "payback",
+                customProtocols[i].vaultId,
+                customProtocols[i].amount
+              );
+              break;
+
+            case "withdraw":
+              if (!customProtocols[i].vaultId) customProtocols[i].vaultId = 0;
+
+              spells = await makerGenericOperations(
+                spells,
+                "withdraw",
+                customProtocols[i].vaultId,
+                customProtocols[i].amount
+              );
+              break;
+
+            default:
+              throw new Error("Invalid Operation");
+          }
         }
-    }
-
-    login = async () => {
-        try {
-            await this.loadWeb3();
-            await this.loadBlockchainData();
-
-            this.setState({color: "#0ff279"});
-            this.setState({buttonText: "Connected"});
-        } catch (err) {
-            console.log(err)
-            this.setState({color: "#85f7ff"});
-            this.setState({buttonText: "Tryagain"});
-        }
-    };
-
-    async loadBlockchainData() { // in browser with react
-        const accounts = await this.state.web3.eth.getAccounts();
-        this.setState({account: accounts[0]});
-        console.log(this.state.account);
-        const dsa = new DSA(this.state.web3);
-        this.setState({dsa});
-
-        // Getting Your DSA Address
-        var existingDSAAddress = await dsa.getAccounts(this.state.account);
-        console.log(existingDSAAddress);
-        if (existingDSAAddress.length === 0) {
-            var newDsaAddress = await dsa.build({
-                gasPrice: this.state.web3.utils.toWei("29", "gwei")
-            });
-        }
-        // change to this.state.account does this requires address as string?
-        existingDSAAddress = await dsa.getAccounts("0xf88b0247e611eE5af8Cf98f5303769Cba8e7177C");
-        console.log(existingDSAAddress);
-        // Setting DSA Instance
-        await dsa.setInstance(existingDSAAddress[0].id);
-        // for testing
-        let dai_address = dsa.tokens.info.dai.address;
-        let eth_address = dsa.tokens.info.eth.address;
-        // Custom Array Sample
-        this.customReciepeMaker([
-            {
-                name: "deposit",
-                protocol: "aave",
-                asset: dai_address
-            }, {
-                name: "swap",
-                protocol: "oasis",
-                // selling token
-                asset: dai_address,
-                buyingTokenSymbol: "ETH",
-                sellingTokenSymbol: "DAI",
-                buyAddress: eth_address,
-                amount: 20
-            },
-        ], this.state.web3, this.state.dsa);
-    }
-
-
-    async customReciepeMaker(customProtocols, web3, dsa) {
-        try {
-            let spells = await dsa.Spell();
-            for (let i = 0; i < customProtocols.length; i++) {
-                if (customProtocols[i].protocol != "maker") { // since the spell structure for maker connectors is different from others
-                    switch (customProtocols[i].name) {
-                        case "borrow":
-                            if (!customProtocols[i].amount) 
-                                throw new Error("Amount Mandatory for Borrow");
-                             else 
-                                spells = await genericDSAOperations(spells, customProtocols[i].protocol, "borrow", customProtocols[i].asset, customProtocols[i].amount);
-                            
-
-                            break;
-
-                        case "deposit":
-                            if (!customProtocols[i].amount) 
-                                spells = await genericDSAOperations(spells, customProtocols[i].protocol, "deposit", customProtocols[i].asset, "-1");
-                             else 
-                                spells = await genericDSAOperations(spells, customProtocols[i].protocol, "deposit", customProtocols[i].asset, customProtocols[i].amount);
-                            
-
-                            break;
-
-                        case "withdraw":
-                            if (!customProtocols[i].amount) 
-                                throw new Error("Amount Mandatory for Withdraw");
-                             else 
-                                spells = await genericDSAOperations(spells, customProtocols[i].protocol, "withdraw", customProtocols[i].asset, customProtocols[i].amount);
-                            
-
-                            break;
-
-                        case "payback":
-                            if (!customProtocols[i].amount) 
-                                spells = await genericDSAOperations(spells, customProtocols[i].protocol, "payback", customProtocols[i].asset, "-1");
-                             else 
-                                spells = await genericDSAOperations(spells, customProtocols[i].protocol, "payback", customProtocols[i].asset, customProtocols[i].amount);
-                            
-
-                            break;
-
-                        case "flashBorrow":
-                            if (!customProtocols[i].amount) 
-                                throw new Error("Amount Mandatory for Flash Borrow");
-                             else 
-                                spells = await flashBorrow(spells, customProtocols[i].asset, customProtocols[i].amount);
-                            
-
-                            break;
-
-                        case "flashPayback":
-                            if (customProtocols[i].amount) 
-                                throw new Error("Amount Not Required for Flash Payback");
-                             else 
-                                spells = await flashPayback(spells, customProtocols[i].asset);
-                            
-
-                            break;
-
-                        case "swap":
-                            if (customProtocols[i].buyingTokenSymbol === customProtocols[i].sellingTokenSymbol) 
-                                throw new Error("Cannot have both assets same");
-                            
-                            const slippage = 2;
-                            // to remove quotes
-                            const protocolInstance = customProtocols[i].protocol.replace(/['"]+/g, "");
-                            const swapDetail = await dsa[protocolInstance].getBuyAmount(customProtocols[i].buyingTokenSymbol, customProtocols[i].sellingTokenSymbol, customProtocols[i].amount, slippage);
-                            spells = await swap(spells, customProtocols[i].protocol, customProtocols[i].buyAddress, customProtocols[i].asset, customProtocols[i].amount, swapDetail.unitAmt);
-                            break;
-
-                        default:
-                            throw new Error("Invalid Operation");
-                    }
-                } else {
-                    switch (customProtocols[i].name) {
-                        case "openVault":
-                            spells = await openMakerVault(spells, this.state.makerVaultOptions[customProtocols[i].sellingTokenSymbol]);
-                            break;
-
-                        case "deposit":
-                            if (!customProtocols[i].vaultId) 
-                                customProtocols[i].vaultId = 0
-                            spells = await makerGenericOperations(spells, "deposit", customProtocols[i].vaultId, customProtocols[i].amount);
-                            break;
-
-                        case "borrow":
-                            if (!customProtocols[i].vaultId) 
-                                customProtocols[i].vaultId = 0
-                            spells = await makerGenericOperations(spells, "borrow", customProtocols[i].vaultId, customProtocols[i].amount);
-                            break;
-
-                        case "payback":
-                            if (!customProtocols[i].vaultId) 
-                                customProtocols[i].vaultId = 0
-                            spells = await makerGenericOperations(spells, "payback", customProtocols[i].vaultId, customProtocols[i].amount);
-                            break;
-
-                        case "withdraw":
-                            if (!customProtocols[i].vaultId) 
-                                customProtocols[i].vaultId = 0
-                            spells = await makerGenericOperations(spells, "withdraw", customProtocols[i].vaultId, customProtocols[i].amount);
-                            break;
-
-                        default:
-                            throw new Error("Invalid Operation");
-                    }
-                }
-            }
-            console.log(spells)
-            var data = {
-                spells: spells
-            };
-            // For Simulation Testing on tenderly
-            var gasLimit = await dsa.estimateCastGas(data).catch((err) => {
-                return console.log(err);
-            });
-        } catch (err) {
-            console.log(err);
-        }
-    }
-
-    handleOperationChange = (idx) => (evt) => {
-        this.state.shareholders[idx].name = evt.target.value;
-        this.setState({shareholders: this.state.shareholders});
-    };
-
-    handleProtocolChange = (idx) => (evt) => {
-        this.state.shareholders[idx].protocol = evt.target.value;
-        this.setState({shareholders: this.state.shareholders});
-    };
-
-    handleAssetChange = (idx) => (evt) => {
-        const assetInstance = evt.target.value.toLowerCase().replace(/['"]+/g, "");
-        this.state.shareholders[idx].asset = this.state.dsa.tokens.info[assetInstance].address;
-        this.state.shareholders[idx].sellingTokenSymbol = evt.target.value;
-        this.setState({shareholders: this.state.shareholders});
-    };
-
-    handleBuyingAssetChange = (idx) => (evt) => {
-        const assetInstance = evt.target.value.toLowerCase().replace(/['"]+/g, "");
-        this.state.shareholders[idx].buyAddress = this.state.dsa.tokens.info[assetInstance].address;
-        this.state.shareholders[idx].buyingTokenSymbol = evt.target.value;
-        this.setState({shareholders: this.state.shareholders});
-    };
-
-    handleAmountChange = (idx) => (evt) => {
-        if (this.state.regexp.test(evt.target.value)) {
-            this.state.shareholders[idx].amount = this.state.web3.utils.toWei(evt.target.value, 'ether');
-            this.setState({shareholders: this.state.shareholders});
-        } else 
-            throw new Error("Amount must be a number!");
-        
-    };
-
-    handleVaultIdChange = (idx) => (evt) => {
-        if (this.state.regexp.test(evt.target.value)) {
-            this.state.shareholders[idx].vaultId = evt.target.value;
-            this.setState({shareholders: this.state.shareholders});
-        } else 
-            throw new Error("Amount must be a number!");
-        
-    };
-
-    handleSubmit = (evt) => {
-        evt.preventDefault();
-        this.customReciepeMaker(this.state.shareholders, this.state.web3, this.state.dsa);
-    };
-
-    handleAddShareholder = () => {
+      }
+      var data = {
+        spells: spells,
+      };
+      console.log(spells);
+      // For Simulation Testing on tenderly
+      var gasLimit = await dsa.estimateCastGas(data).catch((err) => {
         this.setState({
-            shareholders: this.state.shareholders.concat([{}])
+          errMessage: "Transaction is likely to fail, Check you spells once!",
         });
-    };
+        this.showErrorModal();
+        return console.log(err);
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  }
 
-    handleRemoveShareholder = (idx) => () => {
-        this.setState({
-            shareholders: this.state.shareholders.filter(
-                (s, sidx) => idx !== sidx
-            )
-        });
-    };
+  handleOperationChange = (idx) => (evt) => {
+    this.state.shareholders[idx].name = evt.target.value;
+    this.setState({ shareholders: this.state.shareholders });
+  };
 
-    render() {
-        let operatorOptions = Object.keys(this.state.operationConfig).map((operation, index) => (
-            <option key={
-                    operation.index
-                }
-                value={operation}>
-                {operation} </option>
-        ));
-        const protocolList = this.state.operationConfig[this.state.operationSelected];
-        let protocolOptions;
-        if (! protocolList) {
-            protocolOptions = null;
-        } else {
-            protocolOptions = this.state.operationConfig[this.state.operationSelected].map((protocol) => (
-                <option key={protocol}
-                    value={protocol}>
-                    {protocol} </option>
-            ));
-        }
+  handleProtocolChange = (idx) => (evt) => {
+    this.state.shareholders[idx].protocol = evt.target.value;
+    this.setState({ shareholders: this.state.shareholders });
+  };
+
+  handleAssetChange = (idx) => (evt) => {
+    try {
+      const assetInstance = evt.target.value
+        .toLowerCase()
+        .replace(/['"]+/g, "");
+      this.state.shareholders[idx].asset = this.state.dsa.tokens.info[
+        assetInstance
+      ].address;
+      this.state.shareholders[idx].sellingTokenSymbol = evt.target.value;
+      this.setState({ shareholders: this.state.shareholders });
+    } catch (err) {
+      this.setState({ errMessage: "Connect your Metamask Wallet Once!" });
+      this.showErrorModal(evt);
+    }
+  };
+
+  handleBuyingAssetChange = (idx) => (evt) => {
+    try {
+      const assetInstance = evt.target.value
+        .toLowerCase()
+        .replace(/['"]+/g, "");
+      this.state.shareholders[idx].buyAddress = this.state.dsa.tokens.info[
+        assetInstance
+      ].address;
+      this.state.shareholders[idx].buyingTokenSymbol = evt.target.value;
+      this.setState({ shareholders: this.state.shareholders });
+    } catch (err) {
+      this.setState({ errMessage: "Connect your Metamask Wallet First" });
+      this.showErrorModal(evt);
+    }
+  };
+
+  handleTransferAssetChange = (evt) => {
+    try {
+      const asset = evt.target.value.toLowerCase().replace(/['"]+/g, "");
+      this.setState({ transferAssetSymbol: asset });
+    } catch (err) {
+      this.setState({ errMessage: "Connect your Metamask Wallet First" });
+      this.showErrorModal(evt);
+    }
+  };
+
+  handleAmountChange = (idx) => (evt) => {
+    try {
+      if (this.state.regexp.test(evt.target.value)) {
+        this.state.shareholders[idx].amount = this.state.web3.utils.toWei(
+          evt.target.value,
+          "ether"
+        );
+        this.setState({ shareholders: this.state.shareholders });
+      } else {
+        this.setState({ errMessage: "Amount Must be a number" });
+        this.showErrorModal(evt);
+      }
+    } catch (err) {
+      this.setState({ errMessage: "Connect your Metamask Wallet First" });
+      this.showErrorModal(evt);
+    }
+  };
+
+  handleDepositAmountChange = (evt) => {
+    try {
+      if (this.state.regexp.test(evt.target.value)) {
+        const depositAmount = this.state.web3.utils.fromWei(
+          evt.target.value,
+          "ether"
+        );
+        this.setState({ depositAmount: evt.target.value });
+      } else {
+        this.setState({ errMessage: "Amount Must be a number" });
+        this.showErrorModal(evt);
+      }
+    } catch (err) {
+      this.setState({ errMessage: "Connect your Metamask Wallet First" });
+      this.showErrorModal(evt);
+    }
+  };
+
+  handleVaultIdChange = (idx) => (evt) => {
+    if (this.state.regexp.test(evt.target.value)) {
+      this.state.shareholders[idx].vaultId = evt.target.value;
+      this.setState({ shareholders: this.state.shareholders });
+    } else {
+      this.setState({ errMessage: "Amount Must be a number" });
+      this.showErrorModal(evt);
+    }
+  };
+
+  handleSubmit = (evt) => {
+    evt.preventDefault();
+    this.customReciepeMaker(
+      this.state.shareholders,
+      this.state.web3,
+      this.state.dsa
+    );
+  };
+
+  transferAssets = async (evt) => {
+    try {
+      evt.preventDefault();
+      const gasPrice = this.state.web3.utils.toWei("1", "gwei");
+      const result = await transferAsset(
+        this.state.dsa,
+        this.state.transferAssetSymbol,
+        this.state.depositAmount,
+        gasPrice
+      );
+      // for testing will change it soon
+      this.setState({
+        successMessage:
+          "https://etherscan.io/tx/0x339f49901ce8a59f739399e5746fd563902949852e40b1b3990525061216d209",
+        tx: result,
+      });
+      this.showSuccessModal(evt);
+    } catch (err) {
+      this.setState({ errMessage: "Transaction Failed" });
+      this.showErrorModal(evt);
+    }
+  };
+
+  getUserPosition = (protocol) => async (evt) => {
+    try {
+      evt.preventDefault();
+      const positionData = await genericResolver(
+        this.state.dsa,
+        protocol,
+        this.state.dsaAddress
+      );
+      const filteredData = {};
+      filteredData["eth"] = positionData["eth"];
+      filteredData["dai"] = positionData["dai"];
+      filteredData["usdc"] = positionData["usdc"];
+      filteredData["liquidation"] = positionData["liquidation"];
+      filteredData["status"] = positionData["status"];
+      filteredData["totalBorrowInEth"] = positionData["totalBorrowInEth"];
+      filteredData["totalSupplyInEth"] = positionData["totalSupplyInEth"];
+
+      this.setState({ resolverData: filteredData });
+      this.showResolverModal();
+    } catch (err) {
+      this.setState({ errMessage: "Please Connect your Wallet" });
+      this.showErrorModal();
+    }
+  };
+
+  getUserMakerPosition = async () => {
+    try {
+      let vaultStats = await makerVaultResolver(
+        this.state.dsa,
+        this.state.dsaAddress
+      );
+      const dsrStats = await makerDSRResolver(
+        this.state.dsa,
+        this.state.dsaAddress
+      );
+      this.setState({ vaultStats, dsrStats });
+      this.showMakerResolverModal();
+    } catch (err) {
+      console.log(err);
+      this.setState({ errMessage: "Please Connect your Wallet" });
+      this.showErrorModal();
+    }
+  };
+
+  handleAddShareholder = () => {
+    this.setState({
+      shareholders: this.state.shareholders.concat([{}]),
+    });
+  };
+
+  handleRemoveShareholder = (idx) => () => {
+    this.setState({
+      shareholders: this.state.shareholders.filter((s, sidx) => idx !== sidx),
+    });
+  };
+
+  showErrorModal = (e) => {
+    this.setState({
+      showError: true,
+    });
+  };
+
+  hideErrorModal = (e) => {
+    this.setState({
+      showError: false,
+    });
+  };
+
+  showWarningModal = (e) => {
+    this.setState({
+      showWarning: true,
+    });
+  };
+
+  hideWarningModal = (e) => {
+    this.setState({
+      showWarning: false,
+    });
+  };
+
+  showSuccessModal = (e) => {
+    this.setState({
+      showSuccess: true,
+    });
+  };
+
+  hideSuccessModal = (e) => {
+    this.setState({
+      showSuccess: false,
+    });
+  };
+
+  showResolverModal = (e) => {
+    this.setState({
+      showResolver: true,
+    });
+  };
+
+  hideResolverModal = (e) => {
+    this.setState({
+      showResolver: false,
+    });
+  };
+
+  showMakerResolverModal = (e) => {
+    this.setState({
+      showMakerResolver: true,
+    });
+  };
+
+  hideMakerResolverModal = (e) => {
+    this.setState({
+      showMakerResolver: false,
+    });
+  };
+
+  render() {
+    const resolverNonObjectOptions = [
+      "liquidation",
+      "status",
+      "totalBorrowInEth",
+      "totalSupplyInEth",
+    ];
+    const userRelatedResolverOptions = ["supply", "borrow"];
+    let operatorOptions = Object.keys(this.state.operationConfig).map(
+      (operation, index) => (
+        <option key={operation.index} value={operation}>
+          {operation}{" "}
+        </option>
+      )
+    );
+    const protocolList = this.state.operationConfig[
+      this.state.operationSelected
+    ];
+    let protocolOptions;
+    if (!protocolList) {
+      protocolOptions = null;
+    } else {
+      protocolOptions = this.state.operationConfig[
+        this.state.operationSelected
+      ].map((protocol) => (
+        <option key={protocol} value={protocol}>
+          {protocol}{" "}
+        </option>
+      ));
+    }
 
         return (
             <div>
@@ -493,11 +789,7 @@ class App extends Component {
 					</div>
 					</div>
 				</div>
-                </div>
-            </div>
-		</div>
-        );
-    }
+    );
+  }
 }
 export default App;
-
