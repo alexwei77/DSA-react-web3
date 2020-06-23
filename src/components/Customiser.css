@@ -7,6 +7,10 @@ html {
     -webkit-font-smoothing: antialiased;
 }
 
+body {
+ overflow: hidden;
+}
+
 *,
 *:before,
 *:after {
@@ -33,6 +37,41 @@ html {
 	padding:10px;
 	display:flex;
 }
+.container2 {
+	border:1px #ccc solid;
+	padding:10px;
+	display:flex;
+	justify-content: center;
+	align-items: center;
+	flex-direction: column;
+}
+
+.gridcontainer {
+  height: 88vh;
+  width: 130vh;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 30px 1fr 30px;
+  border:1px #3498DB solid;
+}
+
+.gridbody {
+  height: 88vh;
+  width: 130vh;
+  display: grid;
+  grid-template-rows: 1fr 3fr;
+  overflow: hidden;
+  border:1px #3498DB solid;
+}
+
+.gridcontent {
+  overflow-y: scroll;
+  height: 88vh;
+  width: 130vh;
+  grid-template-rows: 1fr 3fr;
+  padding: 20px;
+  border:1px #3498DB solid;
+}
 
 .box1 {
 	border:1px #ccc solid;
@@ -44,11 +83,56 @@ html {
 }
 
 .box3 {
+	border:1px #222 solid;
+}
+
+.box4 {
+	display:flex;
+	flex-direction:column;
+	align-items:center;
+	justify-content: center;
+	margin: 30px 10px 10px 10px;
 	border:1px #ccc solid;
 }
-.box4 {
-	border:1px #ccc solid;
-	flex:3;
+
+.box4 div {
+	width:100%;
+	height:100%;
+	margin: 1px 1px 1px 1px;
+}
+
+.box5 {
+	display:flex;
+	flex-direction:column;
+	align-items:center;
+	justify-content: center;
+	border:1px #222 solid;
+	margin: 15px 10px 10px 10px;
+}
+
+
+.box5 div {
+	width:100%;
+	height:100%;
+	margin: 8px 8px 8px 8px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 2px;
+  display: inline-block;
+  margin: 1rem;
+  position: relative;
+  height: 250px;
+  width: 350px;
+  border-radius: 15px;
+}
+
+.card-3 {
+  box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+}
+.card-4 {
+  box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
 }
 
 .content {
@@ -113,7 +197,7 @@ html {
   border: none;
   border-radius: 10px;
   color: #eee;
-  font-size: 20px;
+  font-size: 15px;
   font-family: "Kanit", sans-serif;
   transition: 1s;
   -webkit-tap-highlight-color: transparent;
@@ -148,29 +232,11 @@ html {
 }
 
 #btn:hover #circle {
-  height: 60px;
+  height: 30px;
   width: 100px;
   left: 0;
   border-radius: 0;
   border-bottom: 2px solid #eee;
-}
-
-.card {
-  background: #fff;
-  border-radius: 2px;
-  display: inline-block;
-  margin: 1rem;
-  position: relative;
-  height: 250px;
-  width: 350px;
-  border-radius: 10px;
-}
-
-.card-3 {
-  box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
-}
-.card-4 {
-  box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
 }
 
 .animate
@@ -179,12 +245,12 @@ html {
 	-webkit-transition: all 0.1s;
 }
 
-.action-button
-{
+.action-button {   
+    justify-content:center;
+	align-items:center;
 	position: relative;
-	padding: 10px 40px;
-    margin: 0px 10px 10px 0px;
-    float: left;
+	padding: 8px 25px;
+    margin: 15px 10px 10px 10px;
 	border-radius: 10px;
 	font-family: 'Rubik', sans-serif;
 	font-size: 25px;
@@ -192,38 +258,173 @@ html {
 	text-decoration: none;	
 }
 
+.new-button1 {   
+    justify-content:center;
+	align-items:center;
+	position: relative;
+	padding: 7px 20px;
+	border-radius: 10px;
+	font-family: 'Rubik', sans-serif;
+	font-size: 20px;
+	color: #FFF;
+	text-decoration: none;	
+}
+
+.new-button2 {   
+    justify-content:center;
+	align-items:center;
+	position: relative;
+	padding: 2px 25px;
+	border-radius: 10px;
+	font-family: 'Rubik', sans-serif;
+	font-size: 20px;
+	color: #FFF;
+	text-decoration: none;	
+}
+
 .blue
 {
 	background-color: #3498DB;
+	border: none;
 	border-bottom: 5px solid #2980B9;
 	text-shadow: 0px -2px #2980B9;
 }
 
 .red
 {
-	background-color: #E74C3C;
+	background-color: #fa716e;
+	border: none;
 	border-bottom: 5px solid #BD3E31;
 	text-shadow: 0px -2px #BD3E31;
 }
 
 .green
 {
-	background-color: #82BF56;
+	background-color: #57d468;
+	border: none;
 	border-bottom: 5px solid #669644;
 	text-shadow: 0px -2px #669644;
 }
 
 .yellow
 {
-	background-color: #F2CF66;
+	background-color: #ede251;
 	border: none;
 	border-bottom: 5px solid #D1B358;
 	text-shadow: 0px -2px #D1B358;
 }
 
+.maker
+{
+	background-color: #31c487;
+	border: none;
+	border-bottom: 5px solid #669644;
+	text-shadow: 0px -2px #669644;
+}
+
 .action-button:active
+{ 
+	transform: translate(0px,5px);
+    -webkit-transform: translate(0px,5px);
+	border-bottom: 1px solid;
+}
+
+.new-button1:active
 {
 	transform: translate(0px,5px);
     -webkit-transform: translate(0px,5px);
 	border-bottom: 1px solid;
+}
+
+.new-button2:active
+{
+	transform: translate(0px,5px);
+    -webkit-transform: translate(0px,5px);
+	border-bottom: 1px solid;
+}
+
+input {
+  background-color: #70c9cf;
+  color: #fff;
+  margin: 5px 5px 5px 5px;
+  padding: 0.5em 0.5em;
+  border-radius: 0.5em;
+  border:none;
+  outline:none;
+  transition: all 0.1s ease-out;
+  position: relative;
+  box-shadow: 0 2px 3px #ccc;
+  border-bottom: 0.15em solid #0f5177;
+}
+
+input:focus {
+  box-shadow: 0 2px 3px #ccc;
+  border-bottom: 0.25em solid #0f5177;
+  top:-2px;
+}
+.custom-select {
+  position : relative;
+  width: 100%;
+  max-width:  20em;
+  cursor: pointer;
+  border: 0 none;
+}
+.select,
+.label{
+  display: block;
+}
+.select {
+  width: 100%;
+  position: absolute;
+  top: 0;
+  height: 4em;
+  opacity: 0;
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+  background: none transparent;
+  border: 0 none;
+}
+.label {
+  position:  relative;
+  padding: 1em;
+  border-radius: .5em;
+  cursor: pointer;
+}
+.label::after {
+  content: "▼";
+  position: absolute;
+  right: 0;
+  top: 0;
+  padding: 1em;
+  border-left: 1px;
+}
+.open .label::after {
+   content: "▲";
+}
+.select-1 {
+   background: #21cf8f;
+  border-bottom: .25em darken(#21cf8f, 10);
+  &:after {
+     border-color: darken(#21cf8f, 10);
+  }
+}
+.select-2 {
+   background: #307ddb;
+  border-bottom: .25em solid darken(#307ddb, 10);
+  &:after {
+     border-color: darken(#307ddb, 10);
+  }
+}
+.select-3 {
+   background: #f2bb18;
+  border-bottom: .25em solid darken(#f2bb18, 10);
+  &:after {
+     border-color: darken(#f2bb18, 10);
+  }
+}
+.select-4 {
+  background: #db3d3d;
+  border-bottom: .25em solid darken(#db3d3d, 10);
+  &:after {
+     border-color: darken(#db3d3d, 10);
+  }
 }

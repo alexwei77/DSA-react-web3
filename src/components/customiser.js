@@ -330,7 +330,7 @@ class App extends Component {
                             this.login
                         }
                         style={
-                            {backgroundColor: this.state.color}
+                            {backgroundColor: this.state.color,borderRadius:"7px",border:"None"}
                     }>
                         {
                         this.state.buttonText
@@ -344,56 +344,67 @@ class App extends Component {
 				<div className="box1">
 				<div className="box3">
 				<div className="card card-3">
-				<div className="box3">
-				<select className="custom-search-select"
-                                    >
-                                        <option>Select Deposit Asset</option>
-                                        <option>ETH</option>
-                                        <option>DAI</option>
-                                        <option>USDC</option>
-                                    </select>
+				<div className="box4">
+				<div>
+				<div class="custom-select">
+                <label for="select-choice2" class="label select-1"><span class="selection-choice">Please choose something</span> </label>
+                <select id="select-choice2" class="select">
+                <option value="Choice 1">ETH</option>
+                <option value="Choice 2">DAI</option>
+                <option value="Choice 3">USD</option>
+                </select>
+                </div>
 				</div> 
-				<div className="box3">
+				<div>
 				<input type="text"
-                                        placeholder={`amount`}
+                                        placeholder={`Amount`}
                 />
 				</div>
-				<div className="box3">
-				<button type="button" 
+				<div>
+				<button type="button" className="new-button1 shadow animate green"
                                >
                                     Deposit
                                 </button>
 				</div>
 				</div>
 				</div>
-				<div className="box4">
-				<div className="card card-4">
-				<div className="box3">
-				<h1>Resolvers</h1>
 				</div>
 				<div className="box3">
-				<button type="button" 
+				<div className="card card-4">
+				<div className="box5">
+				<div>
+				<button type="button" className="new-button2 shadow animate red"
                                >
-                                    maker
+                                    Aave
+                                </button>
+				</div>
+				<div>
+				<button type="button" className="new-button2 shadow animate red"
+                               >
+                                    Maker
                                 </button>
 				</div> 
-				<div className="box3">
-				<button type="button" 
+				<div>
+				<button type="button" className="new-button2 shadow animate red"
                                >
-                                    compound
+                                    Compound
                                 </button>
 				</div>
-				<div className="box3">
-				<button type="button" 
+				<div>
+				<button type="button" className="new-button2 shadow animate red"
                                >
-                                    dydx
+                                    DyDx
                                 </button>
 				</div>
-				
+				</div>
 				</div>
 				</div>
 				</div>
 				<div className="box2">
+				<div class="gridcontainer">
+				<div class="gridbody">
+				<div class="gridcontent">
+				<div className="box3">
                     <form> {
                         this.state.shareholders.map((shareholder, idx) => (
                             <div>
@@ -432,12 +443,12 @@ class App extends Component {
                                     <option>USDC</option>
                                 </select>}
                                 <input type="text"
-                                    placeholder={`amount`}
+                                    placeholder={`Amount`}
                                     onChange={
                                         this.handleAmountChange(idx)
                                     }/> {
                                 shareholder.name == "swap" && (
-                                    <select className="custom-search-select"
+                                    <select className=""
                                         onChange={
                                             this.handleBuyingAssetChange(idx)
                                     }>
@@ -470,12 +481,16 @@ class App extends Component {
                             onClick={
                                 this.handleAddShareholder
                         }>
-                            Add
+                            Add Block
                         </button>
-                        <button type="button" className="action-button shadow animate yellow" onClick={
+                        <button type="button" className="action-button shadow animate green" onClick={
                             this.handleSubmit
-                        }>execute</button>
+                        }>Execute</button>
                     </form>
+					</div>
+					</div>
+					</div>
+					</div>
 					</div>
 				</div>
                 </div>
