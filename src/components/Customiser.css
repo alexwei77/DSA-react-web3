@@ -4,7 +4,7 @@
 
 html {
     box-sizing: border-box;
-    -webkit-font-smoothing: antialiased;
+    -webkit-font-smoothing: antialiased; 
 }
 
 body {
@@ -15,6 +15,10 @@ body {
 *:before,
 *:after {
     box-sizing: inherit;
+}
+
+*,*:focus,*:hover {
+	outline:none;
 }
 
 #container {
@@ -83,7 +87,8 @@ body {
 }
 
 .box3 {
-	border:1px #222 solid;
+	border:1px #3498DB solid;
+	flex-direction:row;
 }
 
 .box4 {
@@ -91,14 +96,13 @@ body {
 	flex-direction:column;
 	align-items:center;
 	justify-content: center;
-	margin: 30px 10px 10px 10px;
-	border:1px #ccc solid;
+	margin: 10px 10px 10px 10px;
 }
 
 .box4 div {
 	width:100%;
 	height:100%;
-	margin: 1px 1px 1px 1px;
+	margin: 5px 5px 5px 5px;
 }
 
 .box5 {
@@ -106,14 +110,20 @@ body {
 	flex-direction:column;
 	align-items:center;
 	justify-content: center;
-	border:1px #222 solid;
-	margin: 15px 10px 10px 10px;
+	margin: 20px 10px 10px 10px;
 }
 
 
 .box5 div {
 	width:100%;
 	height:100%;
+	margin: 8px 8px 8px 8px;
+}
+
+.box6 {
+	width:100%;
+	height:100%;
+	border:1px #222 solid;
 	margin: 8px 8px 8px 8px;
 }
 
@@ -329,11 +339,19 @@ body {
 	border-bottom: 1px solid;
 }
 
+.action-button:focus {
+  outline:none;
+}
+
 .new-button1:active
 {
 	transform: translate(0px,5px);
     -webkit-transform: translate(0px,5px);
 	border-bottom: 1px solid;
+}
+
+.new-button1:focus {
+  outline:none;
 }
 
 .new-button2:active
@@ -343,24 +361,41 @@ body {
 	border-bottom: 1px solid;
 }
 
+.new-button2:focus {
+  outline:none;
+}
+
 input {
-  background-color: #70c9cf;
+  background-color: #1adbd5;
   color: #fff;
   margin: 5px 5px 5px 5px;
-  padding: 0.5em 0.5em;
+  padding: 10px 2px;
   border-radius: 10px;
   border:none;
   outline:none;
   transition: all 0.1s ease-out;
   position: relative;
+  font-family: 'Rubik', sans-serif;
+  font-size: 18px;
+  text-align: center;
   box-shadow: 0 2px 3px #ccc;
-  border-bottom: 0.15em solid #0f5177;
+  border-bottom: 0.2em solid #0f5177;
+}
+
+input::placeholder {
+ color:#FFF;
+ text-shadow: 0px -2px #2980B9;
 }
 
 input:focus {
   box-shadow: 0 2px 3px #ccc;
-  border-bottom: 0.25em solid #0f5177;
+  border-bottom: 0.27em solid #0f5177;
   top:-2px;
+}
+
+form {
+	height:100%;
+	width:100%;
 }
 
 .custom-select {
@@ -385,6 +420,7 @@ input:focus {
   background: none transparent;
   border: 0 none;
 }
+
 .label {
   position:  relative;
   padding: 1em;
@@ -402,6 +438,7 @@ input:focus {
 .open .label::after {
    content: "▲";
 }
+
 .select-1 {
    background: #21cf8f;
   border-bottom: .25em solid darken(#21cf8f, 10);
@@ -409,6 +446,11 @@ input:focus {
      border-color: darken(#21cf8f, 10);
   }
 }
+
+.select-1:focus {
+  outline:none;
+}
+
 .select-2 {
    background: #307ddb;
   border-bottom: .25em solid darken(#307ddb, 10);

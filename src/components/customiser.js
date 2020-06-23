@@ -641,9 +641,10 @@ class App extends Component {
 				<div className="box3">
 				<div className="card card-3">
 				<div className="box4">
+				<form>
 				<div>
 				<div class="custom-select">
-                <label for="select-choice2" class="label select-1"><span class="selection-choice">Please choose something</span> </label>
+                <label for="select-choice2" class="label select-1"><span class="selection-choice">display</span></label>
                 <select id="select-choice2" class="select">
                 <option value="Choice 1">ETH</option>
                 <option value="Choice 2">DAI</option>
@@ -662,6 +663,7 @@ class App extends Component {
                                     Deposit
                                 </button>
 				</div>
+				</form>
 				</div>
 				</div>
 				</div>
