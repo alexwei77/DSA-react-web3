@@ -48,7 +48,7 @@ class App extends Component {
         flashBorrow: ["instapool"],
         flashPayback: ["instapool"],
       },
-      regexp: /^[0-9\b]+$/,
+      regexp: /^[0-9](\.[0-9]+)?$/,
       makerVaultOptions: {
         ETH: "ETH-A",
         USDC: "USDC-A",
@@ -441,7 +441,7 @@ class App extends Component {
   handleDepositAmountChange = (evt) => {
     try {
       if (this.state.regexp.test(evt.target.value)) {
-        const depositAmount = this.state.web3.utils.fromWei(
+        const depositAmount = this.state.web3.utils.toWei(
           evt.target.value,
           "ether"
         );
@@ -680,7 +680,7 @@ class App extends Component {
                 </div>
 				</div> 
 				<div>
-				<input type="text"
+				<input type="number"
                                         placeholder={`Amount`}
                 />
 				</div>
@@ -767,7 +767,7 @@ class App extends Component {
                                     <option>ETH</option>
                                     <option>USDC</option>
                                 </select>}
-                                <input type="text"
+                                <input type="number"
                                     placeholder={`Amount`}
                                     onChange={
                                         this.handleAmountChange(idx)
