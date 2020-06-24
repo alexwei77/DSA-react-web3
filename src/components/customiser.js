@@ -1,6 +1,8 @@
 import React, { Component } from "react";
 import Web3 from "web3";
+import Authereum from "authereum";
 import Modal from "react-bootstrap/Modal";
+import Web3Modal from "web3modal";
 import "bootstrap/dist/css/bootstrap.min.css";
 import {
   flashBorrow,
@@ -53,23 +55,48 @@ class App extends Component {
       },
     };
   }
-
+  
   async componentWillMount() {
     this.showWarningModal();
   }
   async loadWeb3() {
-    if (window.ethereum) {
-      const web3 = new Web3(window.ethereum);
-      await window.ethereum.enable();
-      this.setState({ web3 });
-    } else if (window.web3) {
-      const web3 = new Web3(window.web3.currentProvider);
-      this.setState({ web3 });
+    //if (window.ethereum) {
+    //const web3 = new Web3(window.ethereum);
+    //await window.ethereum.enable();
+    const providerOptions = {
+    /* See Provider Options Section */
+	authereum: {
+    package: Authereum // required
+  }
+    };
+    const web3Modal = new Web3Modal({
+    network: "mainnet", // optional
+    cacheProvider: false, // optional
+    providerOptions // required
+    });
+    const provider = await web3Modal.connect();
+    const web3 = new Web3(provider);
+    this.setState({ web3 });
+    /*} else if (window.web3) {
+    //const web3 = new Web3(window.web3.currentProvider);
+    await window.ethereum.enable();
+    const providerOptions = {
+    // See Provider Options Section 
+    };
+    const web3Modal = new Web3Modal({
+    network: "mainnet", // optional
+    cacheProvider: true, // optional
+    providerOptions // required
+    });
+    const provider = await web3Modal.connect();
+    const web3 = new Web3(provider);
+    this.setState({ web3 });
     } else {
       window.alert(
         "Non-Ethereum browser detected. You should consider trying MetaMask!"
       );
-    }
+    } 
+	*/
   }
 
   login = async () => {
@@ -104,7 +131,7 @@ class App extends Component {
     }
     // change to this.state.account does this requires address as string?
     existingDSAAddress = await dsa.getAccounts(
-      "0xf88b0247e611eE5af8Cf98f5303769Cba8e7177C"
+      this.state.account
     );
     console.log(existingDSAAddress);
     this.setState({ dsaAddress: existingDSAAddress[0].address });
