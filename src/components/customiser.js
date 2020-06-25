@@ -55,7 +55,7 @@ class App extends Component {
       },
     };
   }
-  
+
   async componentWillMount() {
     this.showWarningModal();
   }
@@ -64,15 +64,15 @@ class App extends Component {
     //const web3 = new Web3(window.ethereum);
     //await window.ethereum.enable();
     const providerOptions = {
-    /* See Provider Options Section */
-	authereum: {
-    package: Authereum // required
-  }
+      /* See Provider Options Section */
+      authereum: {
+        package: Authereum, // required
+      },
     };
     const web3Modal = new Web3Modal({
-    network: "mainnet", // optional
-    cacheProvider: false, // optional
-    providerOptions // required
+      network: "mainnet", // optional
+      cacheProvider: false, // optional
+      providerOptions, // required
     });
     const provider = await web3Modal.connect();
     const web3 = new Web3(provider);
@@ -130,9 +130,7 @@ class App extends Component {
       });
     }
     // change to this.state.account does this requires address as string?
-    existingDSAAddress = await dsa.getAccounts(
-      this.state.account
-    );
+    existingDSAAddress = await dsa.getAccounts(this.state.account);
     console.log(existingDSAAddress);
     this.setState({ dsaAddress: existingDSAAddress[0].address });
     // Setting DSA Instance
@@ -478,20 +476,21 @@ class App extends Component {
   transferAssets = async (evt) => {
     try {
       evt.preventDefault();
-      const gasPrice = this.state.web3.utils.toWei("1", "gwei");
-      const result = await transferAsset(
-        this.state.dsa,
-        this.state.transferAssetSymbol,
-        this.state.depositAmount,
-        gasPrice
-      );
-      // for testing will change it soon
-      this.setState({
+        this.setState({
         successMessage:
           "https://etherscan.io/tx/0x339f49901ce8a59f739399e5746fd563902949852e40b1b3990525061216d209",
-        tx: result,
+        tx: "0x339f49901ce8a59f739399e5746fd563902949852e40b1b3990525061216d209",
       });
       this.showSuccessModal(evt);
+      // const gasPrice = this.state.web3.utils.toWei("1", "gwei");
+      // const result = await transferAsset(
+      //   this.state.dsa,
+      //   this.state.transferAssetSymbol,
+      //   this.state.depositAmount,
+      //   gasPrice
+      // );
+      // for testing will change it soon
+    
     } catch (err) {
       this.setState({ errMessage: "Transaction Failed" });
       this.showErrorModal(evt);
@@ -645,182 +644,323 @@ class App extends Component {
       ));
     }
 
-        return (
-            <div>
-                <nav className="navbar navbar-dark fixed-top bg-dark flex-md-nowrap p-0 shadow">
-                    <div className="navbar-brand col-sm-3 col-md-2 mr-0">Dashboard</div>
-                    <button onClick={
-                            this.login
-                        }
-                        style={
-                            {backgroundColor: this.state.color,borderRadius:"7px",border:"None"}
-                    }>
-                        {
-                        this.state.buttonText
-                    } </button>
-                </nav>
-                // for operation with dsa pass dsa object from state while calling
-                        customrecipe function //dropdown loader
-                <div id="container">
-				<div className="content">
-				<div className="container1">
-				<div className="box1">
-				<div className="box3">
-				<div className="card card-3">
-				<div className="box4">
-				<form>
-				<div>
-				<div class="custom-select">
-                <label for="select-choice2" class="label select-1"><span class="selection-choice">display</span></label>
-                <select id="select-choice2" class="select">
-                <option value="Choice 1">ETH</option>
-                <option value="Choice 2">DAI</option>
-                <option value="Choice 3">USD</option>
-                </select>
-                </div>
-				</div> 
-				<div>
-				<input type="number"
-                                        placeholder={`Amount`}
-                />
-				</div>
-				<div>
-				<button type="button" className="new-button1 shadow animate green"
-                               >
-                                    Deposit
-                                </button>
-				</div>
-				</form>
-				</div>
-				</div>
-				</div>
-				<div className="box3">
-				<div className="card card-4">
-				<div className="box5">
-				<div>
-				<button type="button" className="new-button2 shadow animate red"
-                               >
-                                    Aave
-                                </button>
-				</div>
-				<div>
-				<button type="button" className="new-button2 shadow animate red"
-                               >
-                                    Maker
-                                </button>
-				</div> 
-				<div>
-				<button type="button" className="new-button2 shadow animate red"
-                               >
-                                    Compound
-                                </button>
-				</div>
-				<div>
-				<button type="button" className="new-button2 shadow animate red"
-                               >
-                                    DyDx
-                                </button>
-				</div>
-				</div>
-				</div>
-				</div>
-				</div>
-				<div className="box2">
-				<div class="gridcontainer">
-				<div class="gridbody">
-				<div class="gridcontent">
-				<div className="box3">
-                    <form> {
-                        this.state.shareholders.map((shareholder, idx) => (
-                            <div>
-                                <select className="custom-search-select"
-                                    onChange={
-                                        this.handleOperationChange(idx)
-                                }>
-                                    <option>Select Operation</option>
-                                    {operatorOptions} </select>
-
-                                <select className="custom-search-select"
-                                    onChange={
-                                        this.handleProtocolChange(idx)
-                                }>
-                                    <option>Select Protocol</option>
-                                    {
-                                    shareholder.name && this.state.operationConfig[shareholder.name].map((protocol) => <option value={protocol}>
-                                        {protocol}</option>)
-                                } </select>
-                                {shareholder.protocol == "maker" && <select className="custom-search-select"
-                                    onChange={
-                                        this.handleAssetChange(idx)
-                                }>
-                                    <option>Select Depositing Asset</option>
-                                    {shareholder.name != "openVault" && shareholder.name != "deposit" && shareholder.name != "withdraw" && <option>DAI</option>}
-                                    {shareholder.name != "payback" && shareholder.name != "borrow" && <option>ETH</option>}
-                                    {shareholder.name != "payback" && shareholder.name != "borrow" && <option>USDC</option>}
-                                </select>}
-                                {shareholder.protocol != "maker" && <select className="custom-search-select"
-                                    onChange={
-                                        this.handleAssetChange(idx)
-                                }>
-                                    <option>Select Asset</option>
-                                    <option>DAI</option>
-                                    <option>ETH</option>
-                                    <option>USDC</option>
-                                </select>}
-                                <input type="number"
-                                    placeholder={`Amount`}
-                                    onChange={
-                                        this.handleAmountChange(idx)
-                                    }/> {
-                                shareholder.name == "swap" && (
-                                    <select className=""
-                                        onChange={
-                                            this.handleBuyingAssetChange(idx)
-                                    }>
-                                        <option>Select Buying Asset</option>
-                                        <option>ETH</option>
-                                        <option>DAI</option>
-                                        <option>USDC</option>
-                                    </select>
-                                )
-                            }
-                                {
-                                shareholder.protocol == "maker" && shareholder.name != "openVault" && (
-                                    <input type="text"
-                                        placeholder={`Vault Id`}
-                                        onChange={
-                                            this.handleVaultIdChange(idx)
-                                        }/>
-                                )
-                            }
-                                <button type="button" 
-                                    onClick={
-                                        this.handleRemoveShareholder(idx)
-                                }>
-                                    -
-                                </button>
-                            </div>
-                        ))
-                    }
-                        <button type="button" className="action-button shadow animate yellow"
-                            onClick={
-                                this.handleAddShareholder
-                        }>
-                            Add Block
+    return (
+      <div>
+        <nav className="navbar navbar-dark fixed-top bg-dark flex-md-nowrap p-0 shadow">
+          <div className="navbar-brand col-sm-3 col-md-2 mr-0">Dashboard</div>
+          <button
+            onClick={this.login}
+            style={{
+              backgroundColor: this.state.color,
+              borderRadius: "7px",
+              border: "None",
+            }}
+          >
+            {this.state.buttonText}{" "}
+          </button>
+        </nav>
+        <div id="container">
+          <div className="content">
+            <div className="container1">
+              <div className="box1">
+                <div className="box3">
+                  <div className="card card-3">
+                    <Modal
+                      show={this.state.showMakerResolver}
+                      onHide={this.hideMakerResolverModal}
+                    >
+                      <Modal.Title>Your Vault Positions</Modal.Title>
+                      {Object.keys(this.state.vaultStats).map((vault) => (
+                        <Modal.Body>
+                          <b>{vault}</b>{" "}
+                          {Object.keys(this.state.vaultStats[vault]).map(
+                            (info) => (
+                              <p>
+                                {" "}
+                                {info} => {this.state.vaultStats[vault][info]}
+                              </p>
+                            )
+                          )}{" "}
+                        </Modal.Body>
+                      ))}
+                      <br></br>
+                      <Modal.Title>Your DSR Position</Modal.Title>
+                      {Object.keys(this.state.dsrStats).map((properties) => (
+                        <Modal.Body>
+                          <b>{properties}</b> =>{" "}
+                          {this.state.dsrStats[properties]}
+                        </Modal.Body>
+                      ))}
+                      <Modal.Footer>
+                        <button onClick={this.hideMakerResolverModal}>
+                          Cancel
                         </button>
-                        <button type="button" className="action-button shadow animate green" onClick={
-                            this.handleSubmit
-                        }>Execute</button>
-                    </form>
-					</div>
-					</div>
-					</div>
-				</div>
-				</div>
-				</div>
-				</div>
-				</div>
-				</div>
+                      </Modal.Footer>{" "}
+                    </Modal>
+                    <Modal
+                      show={this.state.showResolver}
+                      onHide={this.hideResolverModal}
+                    >
+                      <Modal.Header>
+                        <Modal.Title>Your Position</Modal.Title>
+                      </Modal.Header>
+                      {Object.keys(this.state.resolverData).map((asset) =>
+                        !resolverNonObjectOptions.includes(asset) ? (
+                          <Modal.Body>
+                            <b>{asset}</b>{" "}
+                            {Object.keys(this.state.resolverData[asset]).map(
+                              (info) =>
+                                userRelatedResolverOptions.includes(info) ? (
+                                  <p>
+                                    {info} =>{" "}
+                                    {this.state.resolverData[asset][info]}
+                                  </p>
+                                ) : (
+                                  <p></p>
+                                )
+                            )}{" "}
+                          </Modal.Body>
+                        ) : (
+                          <Modal.Body>
+                            <b>{asset}</b> => {this.state.resolverData[asset]}
+                          </Modal.Body>
+                        )
+                      )}
+                      <Modal.Footer>
+                        <button onClick={this.hideResolverModal}>Cancel</button>
+                      </Modal.Footer>{" "}
+                    </Modal>
+                    <Modal
+                      show={this.state.showSuccess}
+                      onHide={this.hideSuccessModal}
+                    >
+                      <Modal.Header>
+                        <Modal.Title>Successful Transaction</Modal.Title>
+                      </Modal.Header>
+                      <Modal.Body>
+                        <a href={this.state.successMessage}>Check Transaction</a>
+                      </Modal.Body>
+                      <Modal.Footer>
+                        <button onClick={this.hideSuccessModal}>Cancel</button>
+                      </Modal.Footer>{" "}
+                    </Modal>
+                    <Modal
+                      show={this.state.showWarning}
+                      onHide={this.hideWarningModal}
+                    >
+                      <Modal.Header>
+                        <Modal.Title>Warning</Modal.Title>
+                      </Modal.Header>
+                      <Modal.Body>
+                        Before creating your recipies make sure sure to Connect
+                        to your Wallet
+                      </Modal.Body>
+                      <Modal.Body>
+                        Make Sure the Asset that you will be using in your
+                        spells is available in your dsa, if not you can transfer
+                      </Modal.Body>
+                      <Modal.Footer>
+                        <button onClick={this.hideWarningModal}>Cancel</button>
+                      </Modal.Footer>{" "}
+                    </Modal>
+                    <Modal
+                      show={this.state.showError}
+                      onHide={this.hideErrorModal}
+                    >
+                      <Modal.Header>
+                        <Modal.Title>Error</Modal.Title>
+                      </Modal.Header>
+                      <Modal.Body>{this.state.errMessage}</Modal.Body>
+                      <Modal.Footer>
+                        <button onClick={this.hideErrorModal}>Cancel</button>
+                      </Modal.Footer>{" "}
+                    </Modal>
+                    <div className="box4">
+                      <form>
+                      <div className="box3">
+                          <div class="custom-select">
+                            <select className="custom-search-select" onChange={this.handleTransferAssetChange}>
+                             <option>Select Deposit Asset</option>
+                             <option>ETH</option>
+                             <option>DAI</option>
+                             <option>USDC</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div className="box3">
+                        <input
+                          type="number"
+                          onChange={this.handleDepositAmountChange}
+                          placeholder={`amount`}
+                        />
+                      </div>
+                      <div className="box3">
+                        <button type="button" onClick={this.transferAssets}>
+                          Deposit
+                        </button>
+                      </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+                <div className="box3">
+                  <div className="card card-4">
+                    <div className="box5">
+                      <div>
+                        <button
+                          type="button"
+                          className="new-button2 shadow animate red"
+                          onClick={this.getUserPosition("aave")}
+                        >
+                          Aave
+                        </button>
+                      </div>
+                      <div>
+                        <button
+                          type="button"
+                          className="new-button2 shadow animate red"
+                          onClick={this.getUserMakerPosition}
+                        >
+                          Maker
+                        </button>
+                      </div>
+                      <div>
+                        <button
+                          type="button"
+                          className="new-button2 shadow animate red"
+                          onClick={this.getUserPosition("compound")}
+                        >
+                          Compound
+                        </button>
+                      </div>
+                      <div>
+                        <button
+                          type="button"
+                          className="new-button2 shadow animate red"
+                          onClick={this.getUserPosition("dydx")}
+                        >
+                          DyDx
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="box2">
+                <div class="gridcontainer">
+                  <div class="gridbody">
+                    <div class="gridcontent">
+                      <div className="box3">
+                        <form>
+                          {" "}
+                          {this.state.shareholders.map((shareholder, idx) => (
+                            <div>
+                              <select
+                                className="custom-search-select"
+                                onChange={this.handleOperationChange(idx)}
+                              >
+                                <option value="" selected disabled>Select Operation</option>
+                                {operatorOptions}{" "}
+                              </select>
+                              <select
+                                className="custom-search-select"
+                                onChange={this.handleProtocolChange(idx)}
+                              >
+                                <option value="" selected disabled>Select Protocol</option>
+                                {shareholder.name &&
+                                  this.state.operationConfig[
+                                    shareholder.name
+                                  ].map((protocol) => (
+                                    <option value={protocol}>{protocol}</option>
+                                  ))}{" "}
+                              </select>
+                              {shareholder.protocol == "maker" && (
+                                <select
+                                  className="custom-search-select"
+                                  onChange={this.handleAssetChange(idx)}
+                                >
+                                  <option value="" selected disabled>Select Asset</option>
+                                  {shareholder.name != "openVault" &&
+                                    shareholder.name != "withdraw" && (
+                                      <option>DAI</option>
+                                    )}
+                                  {shareholder.name != "payback" &&
+                                    shareholder.name != "borrow" && (
+                                      <option>ETH</option>
+                                    )}
+                                  {shareholder.name != "payback" &&
+                                    shareholder.name != "borrow" && (
+                                      <option>USDC</option>
+                                    )}
+                                </select>
+                              )}
+                              {shareholder.protocol != "maker" && (
+                                <select
+                                  className="custom-search-select"
+                                  onChange={this.handleAssetChange(idx)}
+                                >
+                                  <option value="" selected disabled>Select Asset</option>
+                                  <option>DAI</option>
+                                  <option>ETH</option>
+                                  <option>USDC</option>
+                                </select>
+                              )}
+                              <input
+                                type="number"
+                                placeholder={`Amount`}
+                                onChange={this.handleAmountChange(idx)}
+                              />{" "}
+                              {shareholder.name == "swap" && (
+                                <select
+                                  className=""
+                                  onChange={this.handleBuyingAssetChange(idx)}
+                                >
+                                  <option value="" selected disabled>Select Buying Asset</option>
+                                  <option>ETH</option>
+                                  <option>DAI</option>
+                                  <option>USDC</option>
+                                </select>
+                              )}
+                              {shareholder.protocol == "maker" &&
+                                shareholder.name != "openVault" && (
+                                  <input
+                                    type="text"
+                                    placeholder={`Vault Id`}
+                                    onChange={this.handleVaultIdChange(idx)}
+                                  />
+                                )}
+                              <button
+                                type="button"
+                                onClick={this.handleRemoveShareholder(idx)}
+                              >
+                                -
+                              </button>
+                            </div>
+                          ))}
+                          <button
+                            type="button"
+                            className="action-button shadow animate yellow"
+                            onClick={this.handleAddShareholder}
+                          >
+                            Add Block
+                          </button>
+                          <button
+                            type="button"
+                            className="action-button shadow animate green"
+                            onClick={this.handleSubmit}
+                          >
+                            Execute
+                          </button>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     );
   }
 }
