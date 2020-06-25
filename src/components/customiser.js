@@ -355,12 +355,24 @@ class App extends Component {
       console.log(spells);
       // For Simulation Testing on tenderly
       var gasLimit = await dsa.estimateCastGas(data).catch((err) => {
+        console.log(err);
         this.setState({
           errMessage: "Transaction is likely to fail, Check you spells once!",
         });
         this.showErrorModal();
-        return console.log(err);
       });
+      // Casting the spells
+      const tx = await dsa
+        .cast({
+          spells: spells,
+          gasPrice: gasLimit,
+        })
+        .catch((err) => {
+          this.setState({
+            errMessage: "Transaction is likely to fail, Check you spells once!",
+          });
+          this.showErrorModal();
+        });
     } catch (err) {
       console.log(err);
     }
