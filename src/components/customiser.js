@@ -27,6 +27,7 @@ class App extends Component {
     this.state = {
       color: "#85f7ff",
       buttonText: "Connect",
+	  initialtext1: "Select Asset",
       showError: false,
       showWarning: false,
       showSuccess: false,
@@ -423,7 +424,9 @@ class App extends Component {
   handleTransferAssetChange = (evt) => {
     try {
       const asset = evt.target.value.toLowerCase().replace(/['"]+/g, "");
+	  const assetname = evt.target.value.toUpperCase().replace(/['"]+/g, "");
       this.setState({ transferAssetSymbol: asset });
+	  this.setState({ initialtext1: assetname });
     } catch (err) {
       this.setState({ errMessage: "Connect your Metamask Wallet First" });
       this.showErrorModal(evt);
@@ -788,30 +791,35 @@ class App extends Component {
                       </Modal.Footer>{" "}
                     </Modal>
                     <div className="box4">
+					<div>
                       <form>
-                      <div className="box3">
-                          <div class="custom-select">
-                            <select className="custom-search-select" onChange={this.handleTransferAssetChange}>
-                             <option>Select Deposit Asset</option>
-                             <option>ETH</option>
-                             <option>DAI</option>
-                             <option>USDC</option>
+                      <div>
+					  <div className="box6">
+                          <div className="custom-select">
+						  <label className="label select-1"><span>{this.state.initialtext1}</span></label>
+                            <select className="select" onChange={this.handleTransferAssetChange}>                             
+                             <option >Select Asset</option>
+							 <option >ETH</option>
+                             <option >DAI</option>
+                             <option >USDC</option>
                             </select>
+							</div>
                           </div>
                         </div>
-                        <div className="box3">
+                        <div>
                         <input
                           type="number"
                           onChange={this.handleDepositAmountChange}
-                          placeholder={`amount`}
+                          placeholder={`Amount`}
                         />
                       </div>
-                      <div className="box3">
-                        <button type="button" onClick={this.transferAssets}>
+                      <div>
+                        <button type="button" onClick={this.transferAssets}  className="new-button1 shadow animate green">
                           Deposit
                         </button>
                       </div>
                       </form>
+					  </div>
                     </div>
                   </div>
                 </div>

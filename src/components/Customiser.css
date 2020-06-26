@@ -102,7 +102,7 @@ body {
 .box4 div {
 	width:100%;
 	height:100%;
-	margin: 5px 5px 5px 5px;
+	margin: 6px 5px 5px 4px;
 }
 
 .box5 {
@@ -110,7 +110,7 @@ body {
 	flex-direction:column;
 	align-items:center;
 	justify-content: center;
-	margin: 20px 10px 10px 10px;
+	margin: 25px 10px 10px 10px;
 }
 
 
@@ -122,9 +122,8 @@ body {
 
 .box6 {
 	width:100%;
-	height:100%;
-	border:1px #222 solid;
-	margin: 8px 8px 8px 8px;
+	height:100%;;
+	margin: 0px 20px 0px 0px;
 }
 
 .card {
@@ -134,7 +133,7 @@ body {
   margin: 1rem;
   position: relative;
   height: 250px;
-  width: 350px;
+  width: 370px;
   border-radius: 15px;
 }
 
@@ -272,6 +271,8 @@ body {
     justify-content:center;
 	align-items:center;
 	position: relative;
+	top:10px;
+	right:6.2px;
 	padding: 7px 20px;
 	border-radius: 10px;
 	font-family: 'Rubik', sans-serif;
@@ -367,12 +368,12 @@ body {
 
 input {
   background-color: #1adbd5;
-  color: #fff;
   margin: 5px 5px 5px 5px;
-  padding: 10px 2px;
+  height:50px;
   border-radius: 10px;
   border:none;
   outline:none;
+  justify-content:center;
   transition: all 0.1s ease-out;
   position: relative;
   font-family: 'Rubik', sans-serif;
@@ -383,8 +384,7 @@ input {
 }
 
 input::placeholder {
- color:#FFF;
- text-shadow: 0px -2px #2980B9;
+
 }
 
 input:focus {
@@ -398,19 +398,24 @@ form {
 	width:100%;
 }
 
+.form:focus {
+  outline:none;
+}
+
 .custom-select {
   position : relative;
   width: 100%;
   max-width:  20em;
   cursor: pointer;
   border: 0 none;
+  margin:auto;
 }
 .select,
 .label{
   display: block;
 }
 .select {
-  width: 87%;
+  width: 87.5%;
   position: absolute;
   top: 0;
   height: 4em;
@@ -419,6 +424,14 @@ form {
   -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
   background: none transparent;
   border: 0 none;
+}
+
+.select:focus {
+  outline:none;
+}
+
+.custom-select:focus {
+  outline:none;
 }
 
 .label {
@@ -437,6 +450,10 @@ form {
 }
 .open .label::after {
    content: "▲";
+}
+
+.label:focus {
+  outline:none;
 }
 
 .select-1 {
