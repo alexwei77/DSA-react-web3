@@ -952,6 +952,7 @@ class App extends Component {
                               <button
                                 type="button"
                                 onClick={this.handleRemoveShareholder(idx)}
+								className="new-button3 shadow animate red2"
                               >
                                 -
                               </button>
