@@ -12,6 +12,8 @@ import {
   openMakerVault,
   makerGenericOperations,
   transferAsset,
+  withdrawDai,
+  depositDai,
 } from "../dsa/utils";
 import {
   genericResolver,
@@ -27,7 +29,7 @@ class App extends Component {
     this.state = {
       color: "#85f7ff",
       buttonText: "Connect",
-	  initialtext1: "Select Asset",
+      initialtext1: "Select Asset",
       showError: false,
       showWarning: false,
       showSuccess: false,
@@ -61,9 +63,6 @@ class App extends Component {
     this.showWarningModal();
   }
   async loadWeb3() {
-    //if (window.ethereum) {
-    //const web3 = new Web3(window.ethereum);
-    //await window.ethereum.enable();
     const providerOptions = {
       /* See Provider Options Section */
       authereum: {
@@ -78,26 +77,6 @@ class App extends Component {
     const provider = await web3Modal.connect();
     const web3 = new Web3(provider);
     this.setState({ web3 });
-    /*} else if (window.web3) {
-    //const web3 = new Web3(window.web3.currentProvider);
-    await window.ethereum.enable();
-    const providerOptions = {
-    // See Provider Options Section 
-    };
-    const web3Modal = new Web3Modal({
-    network: "mainnet", // optional
-    cacheProvider: true, // optional
-    providerOptions // required
-    });
-    const provider = await web3Modal.connect();
-    const web3 = new Web3(provider);
-    this.setState({ web3 });
-    } else {
-      window.alert(
-        "Non-Ethereum browser detected. You should consider trying MetaMask!"
-      );
-    } 
-	*/
   }
 
   login = async () => {
@@ -120,6 +99,7 @@ class App extends Component {
     this.setState({ account: accounts[0] });
     console.log(this.state.account);
     const dsa = new DSA(this.state.web3);
+    console.log(dsa);
     this.setState({ dsa });
 
     // Getting Your DSA Address
@@ -362,7 +342,6 @@ class App extends Component {
         });
         this.showErrorModal();
       });
-      // Casting the spells
       const tx = await dsa
         .cast({
           spells: spells,
@@ -424,9 +403,9 @@ class App extends Component {
   handleTransferAssetChange = (evt) => {
     try {
       const asset = evt.target.value.toLowerCase().replace(/['"]+/g, "");
-	  const assetname = evt.target.value.toUpperCase().replace(/['"]+/g, "");
+      const assetname = evt.target.value.toUpperCase().replace(/['"]+/g, "");
       this.setState({ transferAssetSymbol: asset });
-	  this.setState({ initialtext1: assetname });
+      this.setState({ initialtext1: assetname });
     } catch (err) {
       this.setState({ errMessage: "Connect your Metamask Wallet First" });
       this.showErrorModal(evt);
@@ -435,16 +414,11 @@ class App extends Component {
 
   handleAmountChange = (idx) => (evt) => {
     try {
-      if (this.state.regexp.test(evt.target.value)) {
-        this.state.shareholders[idx].amount = this.state.web3.utils.toWei(
-          evt.target.value,
-          "ether"
-        );
-        this.setState({ shareholders: this.state.shareholders });
-      } else {
-        this.setState({ errMessage: "Amount Must be a number" });
-        this.showErrorModal(evt);
-      }
+      this.state.shareholders[idx].amount = this.state.web3.utils.toWei(
+        evt.target.value,
+        "ether"
+      );
+      this.setState({ shareholders: this.state.shareholders });
     } catch (err) {
       this.setState({ errMessage: "Connect your Metamask Wallet First" });
       this.showErrorModal(evt);
@@ -453,16 +427,11 @@ class App extends Component {
 
   handleDepositAmountChange = (evt) => {
     try {
-      if (this.state.regexp.test(evt.target.value)) {
-        const depositAmount = this.state.web3.utils.toWei(
-          evt.target.value,
-          "ether"
-        );
-        this.setState({ depositAmount: evt.target.value });
-      } else {
-        this.setState({ errMessage: "Amount Must be a number" });
-        this.showErrorModal(evt);
-      }
+      const depositAmount = this.state.web3.utils.toWei(
+        evt.target.value,
+        "ether"
+      );
+      this.setState({ depositAmount: evt.target.value });
     } catch (err) {
       this.setState({ errMessage: "Connect your Metamask Wallet First" });
       this.showErrorModal(evt);
@@ -470,13 +439,8 @@ class App extends Component {
   };
 
   handleVaultIdChange = (idx) => (evt) => {
-    if (this.state.regexp.test(evt.target.value)) {
-      this.state.shareholders[idx].vaultId = evt.target.value;
-      this.setState({ shareholders: this.state.shareholders });
-    } else {
-      this.setState({ errMessage: "Amount Must be a number" });
-      this.showErrorModal(evt);
-    }
+    this.state.shareholders[idx].vaultId = evt.target.value;
+    this.setState({ shareholders: this.state.shareholders });
   };
 
   handleSubmit = (evt) => {
@@ -491,21 +455,19 @@ class App extends Component {
   transferAssets = async (evt) => {
     try {
       evt.preventDefault();
-        this.setState({
-        successMessage:
-          "https://etherscan.io/tx/0x339f49901ce8a59f739399e5746fd563902949852e40b1b3990525061216d209",
-        tx: "0x339f49901ce8a59f739399e5746fd563902949852e40b1b3990525061216d209",
+
+      const gasPrice = this.state.web3.utils.toWei("1", "gwei");
+      const result = await transferAsset(
+        this.state.dsa,
+        this.state.transferAssetSymbol,
+        this.state.depositAmount,
+        gasPrice
+      );
+      // for testing will change it soon
+      this.setState({
+        successMessage: "https://etherscan.io/tx/" + result,
       });
       this.showSuccessModal(evt);
-      // const gasPrice = this.state.web3.utils.toWei("1", "gwei");
-      // const result = await transferAsset(
-      //   this.state.dsa,
-      //   this.state.transferAssetSymbol,
-      //   this.state.depositAmount,
-      //   gasPrice
-      // );
-      // for testing will change it soon
-    
     } catch (err) {
       this.setState({ errMessage: "Transaction Failed" });
       this.showErrorModal(evt);
@@ -753,7 +715,9 @@ class App extends Component {
                         <Modal.Title>Successful Transaction</Modal.Title>
                       </Modal.Header>
                       <Modal.Body>
-                        <a href={this.state.successMessage}>Check Transaction</a>
+                        <a href={this.state.successMessage}>
+                          Check Transaction
+                        </a>
                       </Modal.Body>
                       <Modal.Footer>
                         <button onClick={this.hideSuccessModal}>Cancel</button>
@@ -791,35 +755,44 @@ class App extends Component {
                       </Modal.Footer>{" "}
                     </Modal>
                     <div className="box4">
-					<div>
-                      <form>
                       <div>
-					  <div className="box6">
-                          <div className="custom-select">
-						  <label className="label select-1"><span>{this.state.initialtext1}</span></label>
-                            <select className="select" onChange={this.handleTransferAssetChange}>                             
-                             <option >Select Asset</option>
-							 <option >ETH</option>
-                             <option >DAI</option>
-                             <option >USDC</option>
-                            </select>
-							</div>
+                        <form>
+                          <div>
+                            <div className="box6">
+                              <div className="custom-select">
+                                <label className="label select-1">
+                                  <span>{this.state.initialtext1}</span>
+                                </label>
+                                <select
+                                  className="select"
+                                  onChange={this.handleTransferAssetChange}
+                                >
+                                  <option>Select Asset</option>
+                                  <option>ETH</option>
+                                  <option>DAI</option>
+                                  <option>USDC</option>
+                                </select>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                        <div>
-                        <input
-                          type="number"
-                          onChange={this.handleDepositAmountChange}
-                          placeholder={`Amount`}
-                        />
+                          <div>
+                            <input
+                              type="number"
+                              onChange={this.handleDepositAmountChange}
+                              placeholder={`Amount`}
+                            />
+                          </div>
+                          <div>
+                            <button
+                              type="button"
+                              onClick={this.transferAssets}
+                              className="new-button1 shadow animate green"
+                            >
+                              Deposit
+                            </button>
+                          </div>
+                        </form>
                       </div>
-                      <div>
-                        <button type="button" onClick={this.transferAssets}  className="new-button1 shadow animate green">
-                          Deposit
-                        </button>
-                      </div>
-                      </form>
-					  </div>
                     </div>
                   </div>
                 </div>
@@ -879,14 +852,18 @@ class App extends Component {
                                 className="custom-search-select"
                                 onChange={this.handleOperationChange(idx)}
                               >
-                                <option value="" selected disabled>Select Operation</option>
+                                <option value="" selected disabled>
+                                  Select Operation
+                                </option>
                                 {operatorOptions}{" "}
                               </select>
                               <select
                                 className="custom-search-select"
                                 onChange={this.handleProtocolChange(idx)}
                               >
-                                <option value="" selected disabled>Select Protocol</option>
+                                <option value="" selected disabled>
+                                  Select Protocol
+                                </option>
                                 {shareholder.name &&
                                   this.state.operationConfig[
                                     shareholder.name
@@ -899,7 +876,9 @@ class App extends Component {
                                   className="custom-search-select"
                                   onChange={this.handleAssetChange(idx)}
                                 >
-                                  <option value="" selected disabled>Select Asset</option>
+                                  <option value="" selected disabled>
+                                    Select Asset
+                                  </option>
                                   {shareholder.name != "openVault" &&
                                     shareholder.name != "withdraw" && (
                                       <option>DAI</option>
@@ -919,7 +898,9 @@ class App extends Component {
                                   className="custom-search-select"
                                   onChange={this.handleAssetChange(idx)}
                                 >
-                                  <option value="" selected disabled>Select Asset</option>
+                                  <option value="" selected disabled>
+                                    Select Asset
+                                  </option>
                                   <option>DAI</option>
                                   <option>ETH</option>
                                   <option>USDC</option>
@@ -935,7 +916,9 @@ class App extends Component {
                                   className=""
                                   onChange={this.handleBuyingAssetChange(idx)}
                                 >
-                                  <option value="" selected disabled>Select Buying Asset</option>
+                                  <option value="" selected disabled>
+                                    Select Buying Asset
+                                  </option>
                                   <option>ETH</option>
                                   <option>DAI</option>
                                   <option>USDC</option>
@@ -944,7 +927,7 @@ class App extends Component {
                               {shareholder.protocol == "maker" &&
                                 shareholder.name != "openVault" && (
                                   <input
-                                    type="text"
+                                    type="number"
                                     placeholder={`Vault Id`}
                                     onChange={this.handleVaultIdChange(idx)}
                                   />
@@ -952,7 +935,7 @@ class App extends Component {
                               <button
                                 type="button"
                                 onClick={this.handleRemoveShareholder(idx)}
-								className="new-button3 shadow animate red2"
+                                className="new-button3 shadow animate red2"
                               >
                                 -
                               </button>
