@@ -96,7 +96,7 @@ body {
 	flex-direction:column;
 	align-items:center;
 	justify-content: center;
-	margin: 10px 10px 10px 10px;
+	margin: 5px 10px 10px 10px;
 }
 
 .box4 div {
@@ -406,6 +406,8 @@ input {
   text-align: center;
   box-shadow: 0 2px 3px #ccc;
   border-bottom: 0.2em solid #0f5177;
+  transition: all 0.1s;
+  -webkit-transition: all 0.1s;
 }
 
 input::placeholder {
@@ -464,6 +466,7 @@ form {
   padding: 1em;
   border-radius: .5em;
   cursor: pointer;
+  border-bottom: 5px solid #1aab75;
 }
 .label::after {
   content: "▼";
