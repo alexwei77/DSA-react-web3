@@ -47,11 +47,10 @@ export const swap = async (
   return spells;
 };
 
-export const transferAsset = async (dsa, token, amount, gasPrice) => {
+export const transferAsset = async (dsa, token, amount) => {
   return await dsa.transfer({
     token: token, // the token key to transfer
     amount: await dsa.tokens.fromDecimal(amount, token), // this helper changes the amount to decimal value
-    gasPrice: gasPrice, // estimate gas price*
   });
 };
 

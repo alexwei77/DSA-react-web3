@@ -13,12 +13,13 @@ import {
   makerGenericOperations,
   transferAsset,
   withdrawDai,
-  depositDai,
+  depositDai
 } from "../dsa/utils";
 import {
   genericResolver,
   makerVaultResolver,
   makerDSRResolver,
+  getBalances
 } from "../dsa/resolvers";
 import "./Customiser.css";
 const DSA = require("dsa-sdk");
@@ -35,11 +36,13 @@ class App extends Component {
       showSuccess: false,
       showResolver: false,
       showMakerResolver: false,
+      showTokenResolver: false,
       errMessage: "",
       successMessage: "",
       resolverData: {},
       vaultStats: {},
       dsrStats: {},
+      balances: {},
       shareholders: [{}],
       operationConfig: {
         borrow: ["compound", "aave", "maker", "dydx"],
@@ -120,27 +123,22 @@ class App extends Component {
     let dai_address = dsa.tokens.info.dai.address;
     let eth_address = dsa.tokens.info.eth.address;
     // Custom Array Sample
-    this.customReciepeMaker(
-      [
-        {
-          name: "deposit",
-          protocol: "aave",
-          asset: dai_address,
-        },
-        {
-          name: "swap",
-          protocol: "oasis",
-          // selling token
-          asset: dai_address,
-          buyingTokenSymbol: "ETH",
-          sellingTokenSymbol: "DAI",
-          buyAddress: eth_address,
-          amount: 20,
-        },
-      ],
-      this.state.web3,
-      this.state.dsa
-    );
+    // this.customReciepeMaker(
+    //   [
+    //     {
+    //       name: "swap",
+    //       protocol: "kyber",
+    //       // selling token
+    //       asset: dai_address,
+    //       buyingTokenSymbol: "ETH",
+    //       sellingTokenSymbol: "DAI",
+    //       buyAddress: eth_address,
+    //       amount: 0.00002,
+    //     }
+    //   ],
+    //   this.state.web3,
+    //   this.state.dsa
+    // );
   }
 
   async customReciepeMaker(customProtocols, web3, dsa) {
@@ -231,30 +229,21 @@ class App extends Component {
               break;
 
             case "flashPayback":
-              if (customProtocols[i].amount)
-                throw new Error("Amount Not Required for Flash Payback");
-              else
-                spells = await flashPayback(spells, customProtocols[i].asset);
-
+                spells = await flashPayback(spells, customProtocols[i].asset)
               break;
 
             case "swap":
-              if (
-                customProtocols[i].buyingTokenSymbol ===
-                customProtocols[i].sellingTokenSymbol
-              )
+              if (customProtocols[i].buyingTokenSymbol === customProtocols[i].sellingTokenSymbol)
                 throw new Error("Cannot have both assets same");
-
+              
+              if (!customProtocols[i].amount)
+                throw new Error("Swap Amount is mandatory");
               const slippage = 2;
-              // to remove quotes
-              const protocolInstance = customProtocols[i].protocol.replace(
-                /['"]+/g,
-                ""
-              );
-              const swapDetail = await dsa[protocolInstance].getBuyAmount(
+              const amount = web3.utils.fromWei(customProtocols[i].amount, 'ether')  
+              const swapDetail = await dsa[customProtocols[i].protocol.toString()].getBuyAmount(
                 customProtocols[i].buyingTokenSymbol,
                 customProtocols[i].sellingTokenSymbol,
-                customProtocols[i].amount,
+                amount,
                 slippage
               );
               spells = await swap(
@@ -333,7 +322,7 @@ class App extends Component {
       var data = {
         spells: spells,
       };
-      console.log(spells);
+      console.log(data);
       // For Simulation Testing on tenderly
       var gasLimit = await dsa.estimateCastGas(data).catch((err) => {
         console.log(err);
@@ -342,20 +331,26 @@ class App extends Component {
         });
         this.showErrorModal();
       });
-      const tx = await dsa
-        .cast({
-          spells: spells,
-          gasPrice: gasLimit,
-        })
+      console.log(gasLimit)
+      const tx = await dsa.cast({spells: spells})
         .catch((err) => {
           this.setState({
             errMessage: "Transaction is likely to fail, Check you spells once!",
           });
           this.showErrorModal();
         });
+      this.setState({
+        successMessage: "https://etherscan.io/tx/" + tx,
+      });
+      this.showSuccessModal();
+      
     } catch (err) {
-      console.log(err);
-    }
+          // console.log(err)
+          this.setState({
+            errMessage: err.message
+          });
+          this.showErrorModal();   
+     }
   }
 
   handleOperationChange = (idx) => (evt) => {
@@ -370,9 +365,8 @@ class App extends Component {
 
   handleAssetChange = (idx) => (evt) => {
     try {
-      const assetInstance = evt.target.value
-        .toLowerCase()
-        .replace(/['"]+/g, "");
+      const assetInstance = evt.target.value.toLowerCase()
+      console.log(assetInstance)
       this.state.shareholders[idx].asset = this.state.dsa.tokens.info[
         assetInstance
       ].address;
@@ -386,9 +380,8 @@ class App extends Component {
 
   handleBuyingAssetChange = (idx) => (evt) => {
     try {
-      const assetInstance = evt.target.value
-        .toLowerCase()
-        .replace(/['"]+/g, "");
+      const assetInstance = evt.target.value.toLowerCase()
+      console.log(assetInstance)
       this.state.shareholders[idx].buyAddress = this.state.dsa.tokens.info[
         assetInstance
       ].address;
@@ -402,8 +395,8 @@ class App extends Component {
 
   handleTransferAssetChange = (evt) => {
     try {
-      const asset = evt.target.value.toLowerCase().replace(/['"]+/g, "");
-      const assetname = evt.target.value.toUpperCase().replace(/['"]+/g, "");
+      const asset = evt.target.value.toLowerCase()
+      const assetname = evt.target.value.toUpperCase()
       this.setState({ transferAssetSymbol: asset });
       this.setState({ initialtext1: assetname });
     } catch (err) {
@@ -455,13 +448,10 @@ class App extends Component {
   transferAssets = async (evt) => {
     try {
       evt.preventDefault();
-
-      const gasPrice = this.state.web3.utils.toWei("1", "gwei");
       const result = await transferAsset(
         this.state.dsa,
         this.state.transferAssetSymbol,
-        this.state.depositAmount,
-        gasPrice
+        this.state.depositAmount
       );
       // for testing will change it soon
       this.setState({
@@ -512,11 +502,22 @@ class App extends Component {
       this.setState({ vaultStats, dsrStats });
       this.showMakerResolverModal();
     } catch (err) {
-      console.log(err);
       this.setState({ errMessage: "Please Connect your Wallet" });
       this.showErrorModal();
     }
   };
+
+  getBalances = async () => {
+    try {
+     const balances = await getBalances(this.state.dsa, this.state.dsaAddress);
+     console.log(balances)
+     this.setState({balances})
+     this.showBalanceResolverModal();
+    } catch (err) {
+      this.setState({ errMessage: "Please Connect your Wallet" });
+      this.showErrorModal();
+    }
+  }
 
   handleAddShareholder = () => {
     this.setState({
@@ -590,6 +591,18 @@ class App extends Component {
     });
   };
 
+  showBalanceResolverModal = (e) => {
+    this.setState({
+      showBalanceResolverModal: true,
+    });
+  };
+
+  hideBalanceResolverModal = (e) => {
+    this.setState({
+      showBalanceResolverModal: false,
+    });
+  };
+
   render() {
     const resolverNonObjectOptions = [
       "liquidation",
@@ -642,6 +655,18 @@ class App extends Component {
               <div className="box1">
                 <div className="box3">
                   <div className="card card-3">
+                    <Modal
+                      show={this.state.showBalanceResolverModal}
+                      onHide={this.hideBalanceResolverModal}
+                    >
+                      <Modal.Header>
+                        <Modal.Title>Your Balances</Modal.Title>
+                      </Modal.Header>
+                      {Object.keys(this.state.balances).map((balance) => <Modal.Body> {balance} => {this.state.balances[balance]}</Modal.Body>)}
+                      <Modal.Footer>
+                        <button onClick={this.hideBalanceResolverModal}>Cancel</button>
+                      </Modal.Footer>{" "}
+                    </Modal>
                     <Modal
                       show={this.state.showMakerResolver}
                       onHide={this.hideMakerResolverModal}
@@ -799,6 +824,15 @@ class App extends Component {
                 <div className="box3">
                   <div className="card card-4">
                     <div className="box5">
+                    <div>
+                        <button
+                          type="button"
+                          className="new-button2 shadow animate red"
+                          onClick={this.getBalances}
+                        >
+                          Tokens
+                        </button>
+                      </div>
                       <div>
                         <button
                           type="button"
@@ -906,11 +940,11 @@ class App extends Component {
                                   <option>USDC</option>
                                 </select>
                               )}
-                              <input
+                              {shareholder.name != "flashPayback" && shareholder.name != "openVault" && <input
                                 type="number"
                                 placeholder={`Amount`}
                                 onChange={this.handleAmountChange(idx)}
-                              />{" "}
+                              />}{" "}
                               {shareholder.name == "swap" && (
                                 <select
                                   className=""
