@@ -870,7 +870,6 @@ class App extends Component {
                           {this.state.shareholders.map((shareholder, idx) => (
                             <div>
 							<div className="custom-select">
-                             
                               <select
                                 className="select2"
                                 onChange={this.handleOperationChange(idx)}
@@ -882,7 +881,6 @@ class App extends Component {
                               </select>
 							  </div>
 							  <div className="custom-select">
-                                
                               <select
                                 className="select2"
                                 onChange={this.handleProtocolChange(idx)}
@@ -896,8 +894,9 @@ class App extends Component {
                                   ].map((protocol) => (
                                     <option value={protocol}>{protocol}</option>
                                   ))}{" "}
-                              </select>
+                              </select></div>
                               {shareholder.protocol === "maker" && (
+							  <div className="custom-select">
                                 <select
                                   className="select2"
                                   onChange={this.handleAssetChange(idx)}
@@ -917,8 +916,10 @@ class App extends Component {
                                       <option>USDC</option>
                                     )}
                                 </select>
-								</div>
+							  </div>
+							  )}
                               {shareholder.protocol !== "maker" && (
+							  <div className="custom-select">
                                 <select
                                   className="select2"
                                   onChange={this.handleAssetChange(idx)}
@@ -984,7 +985,9 @@ class App extends Component {
                           >
                             Execute
                           </button>
+						 
                         </form>
+					
                       </div>
                     </div>
                   </div>
