@@ -38,6 +38,7 @@ class App extends Component {
       showMakerResolver: false,
       showTokenResolver: false,
       errMessage: "",
+      shortnerAddress: "",
       successMessage: "",
       resolverData: {},
       vaultStats: {},
@@ -86,14 +87,20 @@ class App extends Component {
     try {
       await this.loadWeb3();
       await this.loadBlockchainData();
-
+      await this.showShortner()
       this.setState({ color: "#0ff279" });
-      this.setState({ buttonText: "Connected" });
+      this.setState({ buttonText: this.state.shortnerAddress});
     } catch (err) {
-      this.setState({ color: "#85f7ff" });
-      this.setState({ buttonText: "Tryagain" });
+      this.setState({ color: "#85f7ff", buttonText: "Try Again", errMessage: "Please select Mainnet in your wallet" });
+      this.showErrorModal();   
     }
   };
+
+  async showShortner() {
+    let address = this.state.dsaAddress.toString()
+    address = address.substring(0,6)+ '......'+ address.substring(address.length -7, address.length -1)
+    this.setState({shortnerAddress : address})
+  }
 
   async loadBlockchainData() {
     // in browser with react
@@ -106,7 +113,7 @@ class App extends Component {
     var existingDSAAddress = await dsa.getAccounts(this.state.account);
     if (existingDSAAddress.length === 0) {
       var newDsaAddress = await dsa.build({
-        gasPrice: this.state.web3.utils.toWei("29", "gwei"),
+        gasPrice: this.state.web3.utils.toWei("27", "gwei"),
       });
     }
     // change to this.state.account does this requires address as string?
@@ -204,7 +211,7 @@ class App extends Component {
               break;
 
             case "flashPayback":
-                spells = await flashPayback(spells, customProtocols[i].asset)
+              spells = await flashPayback(spells, customProtocols[i].asset)
               break;
 
             case "swap":
@@ -214,7 +221,8 @@ class App extends Component {
               if (!customProtocols[i].amount)
                 throw new Error("Swap Amount is mandatory");
               const slippage = 2;
-              const amount = web3.utils.fromWei(customProtocols[i].amount, 'ether')  
+              const amount = web3.utils.fromWei(customProtocols[i].amount, 'ether')
+
               const swapDetail = await dsa[customProtocols[i].protocol.toString()].getBuyAmount(
                 customProtocols[i].buyingTokenSymbol,
                 customProtocols[i].sellingTokenSymbol,
@@ -307,31 +315,23 @@ class App extends Component {
       var data = {
         spells: spells,
       };
-      console.log(data);
       // For Simulation Testing on tenderly
-      // var gasLimit = await dsa.estimateCastGas(data).catch((err) => {
-      //   console.log(err);
-      //   this.setState({
-      //     errMessage: "Transaction is likely to fail, Check you spells once!",
-      //   });
-      //   this.showErrorModal();
-      // });
-      // console.log(gasLimit)
+      var gasLimit = await dsa.estimateCastGas(data).catch((err) => {
+        this.setState({
+          errMessage: "Transaction is likely to fail, Check you spells once!",
+        });
+        this.showErrorModal();
+      });
       const tx = await dsa.cast({spells: spells})
         .catch((err) => {
-          this.setState({
-            errMessage: "Transaction is likely to fail, Check you spells once!",
-          });
-          this.showErrorModal();
+          throw new Error("Transaction is likely to fail, Check you spells once!")
         });
       if (tx) {
       this.setState({
         successMessage: "https://etherscan.io/tx/" + tx
       });
       this.showSuccessModal();
-      }
-    
-      
+      }  
     } catch (err) {
           this.setState({
             errMessage: err.message
