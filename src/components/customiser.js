@@ -90,7 +90,6 @@ class App extends Component {
       this.setState({ color: "#0ff279" });
       this.setState({ buttonText: "Connected" });
     } catch (err) {
-      console.log(err);
       this.setState({ color: "#85f7ff" });
       this.setState({ buttonText: "Tryagain" });
     }
@@ -100,14 +99,11 @@ class App extends Component {
     // in browser with react
     const accounts = await this.state.web3.eth.getAccounts();
     this.setState({ account: accounts[0] });
-    console.log(this.state.account);
     const dsa = new DSA(this.state.web3);
-    console.log(dsa);
     this.setState({ dsa });
 
     // Getting Your DSA Address
     var existingDSAAddress = await dsa.getAccounts(this.state.account);
-    console.log(existingDSAAddress);
     if (existingDSAAddress.length === 0) {
       var newDsaAddress = await dsa.build({
         gasPrice: this.state.web3.utils.toWei("29", "gwei"),
@@ -115,37 +111,16 @@ class App extends Component {
     }
     // change to this.state.account does this requires address as string?
     existingDSAAddress = await dsa.getAccounts(this.state.account);
-    console.log(existingDSAAddress);
     this.setState({ dsaAddress: existingDSAAddress[0].address });
     // Setting DSA Instance
     await dsa.setInstance(existingDSAAddress[0].id);
-    // for testing
-    let dai_address = dsa.tokens.info.dai.address;
-    let eth_address = dsa.tokens.info.eth.address;
-    // Custom Array Sample
-    // this.customReciepeMaker(
-    //   [
-    //     {
-    //       name: "swap",
-    //       protocol: "kyber",
-    //       // selling token
-    //       asset: dai_address,
-    //       buyingTokenSymbol: "ETH",
-    //       sellingTokenSymbol: "DAI",
-    //       buyAddress: eth_address,
-    //       amount: 0.00002,
-    //     }
-    //   ],
-    //   this.state.web3,
-    //   this.state.dsa
-    // );
   }
 
   async customReciepeMaker(customProtocols, web3, dsa) {
     try {
       let spells = await dsa.Spell();
       for (let i = 0; i < customProtocols.length; i++) {
-        if (customProtocols[i].protocol != "maker") {
+        if (customProtocols[i].protocol !== "maker") {
           // since the spell structure for maker connectors is different from others
           switch (customProtocols[i].name) {
             case "borrow":
@@ -272,13 +247,18 @@ class App extends Component {
 
             case "deposit":
               if (!customProtocols[i].vaultId) customProtocols[i].vaultId = 0;
-
-              spells = await makerGenericOperations(
+              
+              if (customProtocols[i].sellingTokenSymbol === "DAI") {
+                spells = await depositDai(spells, customProtocols[i].amount)
+              } else {
+                spells = await makerGenericOperations(
                 spells,
                 "deposit",
                 customProtocols[i].vaultId,
                 customProtocols[i].amount
               );
+              }
+             
               break;
 
             case "borrow":
@@ -306,12 +286,17 @@ class App extends Component {
             case "withdraw":
               if (!customProtocols[i].vaultId) customProtocols[i].vaultId = 0;
 
-              spells = await makerGenericOperations(
+              if (customProtocols[i].sellingTokenSymbol === "DAI") {
+                spells = await withdrawDai(spells, customProtocols[i].amount)
+              } else {
+                spells = await makerGenericOperations(
                 spells,
                 "withdraw",
                 customProtocols[i].vaultId,
                 customProtocols[i].amount
               );
+              }
+             
               break;
 
             default:
@@ -324,14 +309,14 @@ class App extends Component {
       };
       console.log(data);
       // For Simulation Testing on tenderly
-      var gasLimit = await dsa.estimateCastGas(data).catch((err) => {
-        console.log(err);
-        this.setState({
-          errMessage: "Transaction is likely to fail, Check you spells once!",
-        });
-        this.showErrorModal();
-      });
-      console.log(gasLimit)
+      // var gasLimit = await dsa.estimateCastGas(data).catch((err) => {
+      //   console.log(err);
+      //   this.setState({
+      //     errMessage: "Transaction is likely to fail, Check you spells once!",
+      //   });
+      //   this.showErrorModal();
+      // });
+      // console.log(gasLimit)
       const tx = await dsa.cast({spells: spells})
         .catch((err) => {
           this.setState({
@@ -339,13 +324,15 @@ class App extends Component {
           });
           this.showErrorModal();
         });
+      if (tx) {
       this.setState({
-        successMessage: "https://etherscan.io/tx/" + tx,
+        successMessage: "https://etherscan.io/tx/" + tx
       });
       this.showSuccessModal();
+      }
+    
       
     } catch (err) {
-          // console.log(err)
           this.setState({
             errMessage: err.message
           });
@@ -366,7 +353,6 @@ class App extends Component {
   handleAssetChange = (idx) => (evt) => {
     try {
       const assetInstance = evt.target.value.toLowerCase()
-      console.log(assetInstance)
       this.state.shareholders[idx].asset = this.state.dsa.tokens.info[
         assetInstance
       ].address;
@@ -381,7 +367,6 @@ class App extends Component {
   handleBuyingAssetChange = (idx) => (evt) => {
     try {
       const assetInstance = evt.target.value.toLowerCase()
-      console.log(assetInstance)
       this.state.shareholders[idx].buyAddress = this.state.dsa.tokens.info[
         assetInstance
       ].address;
@@ -510,7 +495,6 @@ class App extends Component {
   getBalances = async () => {
     try {
      const balances = await getBalances(this.state.dsa, this.state.dsaAddress);
-     console.log(balances)
      this.setState({balances})
      this.showBalanceResolverModal();
     } catch (err) {
@@ -610,6 +594,8 @@ class App extends Component {
       "totalBorrowInEth",
       "totalSupplyInEth",
     ];
+
+    const tokensToRender = ["dai", "eth", "usdc"]
     const userRelatedResolverOptions = ["supply", "borrow"];
     let operatorOptions = Object.keys(this.state.operationConfig).map(
       (operation, index) => (
@@ -660,9 +646,9 @@ class App extends Component {
                       onHide={this.hideBalanceResolverModal}
                     >
                       <Modal.Header>
-                        <Modal.Title>Your Balances</Modal.Title>
+                        <Modal.Title><b>Your DSA Balances</b></Modal.Title>
                       </Modal.Header>
-                      {Object.keys(this.state.balances).map((balance) => <Modal.Body> {balance} => {this.state.balances[balance]}</Modal.Body>)}
+                      {Object.keys(this.state.balances).map((balance) => tokensToRender.includes(balance) ? <Modal.Body> {balance} => {this.state.balances[balance]}</Modal.Body>: '')}
                       <Modal.Footer>
                         <button onClick={this.hideBalanceResolverModal}>Cancel</button>
                       </Modal.Footer>{" "}
@@ -671,7 +657,7 @@ class App extends Component {
                       show={this.state.showMakerResolver}
                       onHide={this.hideMakerResolverModal}
                     >
-                      <Modal.Title>Your Vault Positions</Modal.Title>
+                      <Modal.Title><b>Your DSA Maker Vault Positions</b></Modal.Title>
                       {Object.keys(this.state.vaultStats).map((vault) => (
                         <Modal.Body>
                           <b>{vault}</b>{" "}
@@ -686,7 +672,7 @@ class App extends Component {
                         </Modal.Body>
                       ))}
                       <br></br>
-                      <Modal.Title>Your DSR Position</Modal.Title>
+                      <Modal.Title><b>Your DSA Maker DSR Position</b></Modal.Title>
                       {Object.keys(this.state.dsrStats).map((properties) => (
                         <Modal.Body>
                           <b>{properties}</b> =>{" "}
@@ -704,7 +690,7 @@ class App extends Component {
                       onHide={this.hideResolverModal}
                     >
                       <Modal.Header>
-                        <Modal.Title>Your Position</Modal.Title>
+                        <Modal.Title><b>Your DSA Position</b></Modal.Title>
                       </Modal.Header>
                       {Object.keys(this.state.resolverData).map((asset) =>
                         !resolverNonObjectOptions.includes(asset) ? (
@@ -737,7 +723,7 @@ class App extends Component {
                       onHide={this.hideSuccessModal}
                     >
                       <Modal.Header>
-                        <Modal.Title>Successful Transaction</Modal.Title>
+                        <Modal.Title><b>Successful Transaction</b></Modal.Title>
                       </Modal.Header>
                       <Modal.Body>
                         <a href={this.state.successMessage}>
@@ -753,7 +739,7 @@ class App extends Component {
                       onHide={this.hideWarningModal}
                     >
                       <Modal.Header>
-                        <Modal.Title>Warning</Modal.Title>
+                        <Modal.Title><b>Warning</b></Modal.Title>
                       </Modal.Header>
                       <Modal.Body>
                         Before creating your recipies make sure sure to Connect
@@ -762,6 +748,9 @@ class App extends Component {
                       <Modal.Body>
                         Make Sure the Asset that you will be using in your
                         spells is available in your dsa, if not you can transfer
+                      </Modal.Body>
+                      <Modal.Body>
+                        If you want to edit a block of spell, then better to use the <b>-</b> button and create the particular spell again to avoid any trasaction failures due to spells
                       </Modal.Body>
                       <Modal.Footer>
                         <button onClick={this.hideWarningModal}>Cancel</button>
@@ -772,7 +761,7 @@ class App extends Component {
                       onHide={this.hideErrorModal}
                     >
                       <Modal.Header>
-                        <Modal.Title>Error</Modal.Title>
+                        <Modal.Title><b>Error</b></Modal.Title>
                       </Modal.Header>
                       <Modal.Body>{this.state.errMessage}</Modal.Body>
                       <Modal.Footer>
@@ -908,10 +897,7 @@ class App extends Component {
                                     <option value={protocol}>{protocol}</option>
                                   ))}{" "}
                               </select>
-							  </div>
-                              {shareholder.protocol == "maker" && (
-							  <div className="custom-select">
-                                
+                              {shareholder.protocol === "maker" && (
                                 <select
                                   className="select2"
                                   onChange={this.handleAssetChange(idx)}
@@ -919,24 +905,20 @@ class App extends Component {
                                   <option value="" selected disabled>
                                     Select Asset
                                   </option>
-                                  {shareholder.name != "openVault" &&
-                                    shareholder.name != "withdraw" && (
+                                  {shareholder.name !== "openVault" && (
                                       <option>DAI</option>
                                     )}
-                                  {shareholder.name != "payback" &&
-                                    shareholder.name != "borrow" && (
+                                  {shareholder.name !== "payback" &&
+                                    shareholder.name !== "borrow" && (
                                       <option>ETH</option>
                                     )}
-                                  {shareholder.name != "payback" &&
-                                    shareholder.name != "borrow" && (
+                                  {shareholder.name !== "payback" &&
+                                    shareholder.name !== "borrow" && (
                                       <option>USDC</option>
                                     )}
                                 </select>
 								</div>
-                              )}
-                              {shareholder.protocol != "maker" && (
-							  <div className="custom-select">
-                                
+                              {shareholder.protocol !== "maker" && (
                                 <select
                                   className="select2"
                                   onChange={this.handleAssetChange(idx)}
@@ -958,7 +940,6 @@ class App extends Component {
                               />}{" "}
                               {shareholder.name == "swap" && (
 							  <div className="custom-select">
-                                
                                 <select
                                   className="select2"
                                   onChange={this.handleBuyingAssetChange(idx)}
