@@ -881,11 +881,9 @@ class App extends Component {
                           {this.state.shareholders.map((shareholder, idx) => (
                             <div>
 							<div className="custom-select">
-                                <label className="label select-1">
-                                  <span>{shareholder.name}</span>
-                                </label>
+                             
                               <select
-                                className="select"
+                                className="select2"
                                 onChange={this.handleOperationChange(idx)}
                               >
                                 <option value="" selected disabled>
@@ -895,11 +893,9 @@ class App extends Component {
                               </select>
 							  </div>
 							  <div className="custom-select">
-                                <label className="label select-1">
-                                  <span>{shareholder.name}</span>
-                                </label>
+                                
                               <select
-                                className="select"
+                                className="select2"
                                 onChange={this.handleProtocolChange(idx)}
                               >
                                 <option value="" selected disabled>
@@ -915,11 +911,9 @@ class App extends Component {
 							  </div>
                               {shareholder.protocol == "maker" && (
 							  <div className="custom-select">
-                                <label className="label select-1">
-                                  <span>{this.state.initialtext1}</span>
-                                </label>
+                                
                                 <select
-                                  className="select"
+                                  className="select2"
                                   onChange={this.handleAssetChange(idx)}
                                 >
                                   <option value="" selected disabled>
@@ -942,11 +936,9 @@ class App extends Component {
                               )}
                               {shareholder.protocol != "maker" && (
 							  <div className="custom-select">
-                                <label className="label select-1">
-                                  <span>{this.state.initialtext1}</span>
-                                </label>
+                                
                                 <select
-                                  className="select"
+                                  className="select2"
                                   onChange={this.handleAssetChange(idx)}
                                 >
                                   <option value="" selected disabled>
@@ -966,15 +958,13 @@ class App extends Component {
                               />}{" "}
                               {shareholder.name == "swap" && (
 							  <div className="custom-select">
-                                <label className="label select-1">
-                                  <span>{this.state.initialtext1}</span>
-                                </label>
+                                
                                 <select
-                                  className="select"
+                                  className="select2"
                                   onChange={this.handleBuyingAssetChange(idx)}
                                 >
                                   <option value="" selected disabled>
-                                    Select Buying Asset
+                                    Buying Asset
                                   </option>
                                   <option>ETH</option>
                                   <option>DAI</option>

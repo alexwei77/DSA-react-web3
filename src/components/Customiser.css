@@ -258,7 +258,7 @@ body {
 	align-items:center;
 	position: relative;
 	padding: 8px 25px;
-    margin: 25px 10px 10px 10px;
+    margin: 40px 10px 10px 10px;
 	border-radius: 10px;
 	font-family: 'Rubik', sans-serif;
 	font-size: 25px;
@@ -320,7 +320,7 @@ body {
 {
 	background-color: #fa716e;
 	border: none;
-	top:15px;
+	top:35px;
 }
 
 .green
@@ -422,7 +422,9 @@ input:focus {
   background-color: #1adbd5;
   margin: 5px 5px 5px 5px;
   height:50px;
-  top:12px;
+  width: 12.5em;
+  top:30px;
+  bottom: 5px;
   border-radius: 10px;
   border:none;
   outline:none;
@@ -430,7 +432,7 @@ input:focus {
   transition: all 0.1s ease-out;
   position: relative;
   font-family: 'Rubik', sans-serif;
-  font-size: 18px;
+  font-size: 15px;
   text-align: center;
   border-bottom: 5px solid #13bab5;
   transition: all 0.1s;
@@ -443,7 +445,6 @@ input:focus {
 
 .input2:focus {
   border-bottom: 6px solid #13bab5;
-  top:-2px;
 }
 
 form {
@@ -457,13 +458,13 @@ form {
 
 .custom-select {
   position : relative;
-  width: 100%;
-  max-width:  14em;
+  width: 70%;
+  max-width: 15.3em;
   cursor: pointer;
-  padding: 0.5em;
   border: 0 none;
-  margin:12px;
+  margin:4px 4px 4px 1px;
   background:transparent;
+  padding: 1.8em;
 }
 .select,
 .label{
@@ -479,6 +480,32 @@ form {
   -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
   background: none transparent;
   border: 0 none;
+}
+
+.select2 {
+  width: 100%;
+  position: relative;
+  top: 1px;
+  bottom: 1px;
+  height: 55.5px;
+  padding: 1em;
+  cursor: pointer;
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+  background: #21cf8f;
+  border-radius: 5px;
+  border: 0 none;
+  color:#373b3b;
+  font-weight:bolder;
+  border-bottom: 5px solid #1aab75;
+}
+
+.select2::after {
+  content: "▼";
+  position: absolute;
+  right: 0;
+  top: 0;
+  padding: 1em;
+  border-left: 1px;
 }
 
 .select:focus {
