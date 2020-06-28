@@ -769,16 +769,15 @@ class App extends Component {
                       </Modal.Footer>{" "}
                     </Modal>
                     <div className="box4">
-                      <div>
                         <form>
                           <div>
                             <div className="box6">
-                              <div className="custom-select">
-                                <label className="label select-1">
+                              <div className="custom-select2">
+                                <label className="new-label select-1">
                                   <span>{this.state.initialtext1}</span>
                                 </label>
                                 <select
-                                  className="select"
+                                  className="new-select"
                                   onChange={this.handleTransferAssetChange}
                                 >
                                   <option>Select Asset</option>
@@ -806,7 +805,6 @@ class App extends Component {
                             </button>
                           </div>
                         </form>
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -871,8 +869,9 @@ class App extends Component {
                           {" "}
                           {this.state.shareholders.map((shareholder, idx) => (
                             <div>
+							<div className="custom-select">
                               <select
-                                className="custom-search-select"
+                                className="select2"
                                 onChange={this.handleOperationChange(idx)}
                               >
                                 <option value="" selected disabled>
@@ -880,8 +879,10 @@ class App extends Component {
                                 </option>
                                 {operatorOptions}{" "}
                               </select>
+							  </div>
+							  <div className="custom-select">
                               <select
-                                className="custom-search-select"
+                                className="select2"
                                 onChange={this.handleProtocolChange(idx)}
                               >
                                 <option value="" selected disabled>
@@ -893,10 +894,11 @@ class App extends Component {
                                   ].map((protocol) => (
                                     <option value={protocol}>{protocol}</option>
                                   ))}{" "}
-                              </select>
+                              </select></div>
                               {shareholder.protocol === "maker" && (
+							  <div className="custom-select">
                                 <select
-                                  className="custom-search-select"
+                                  className="select2"
                                   onChange={this.handleAssetChange(idx)}
                                 >
                                   <option value="" selected disabled>
@@ -914,10 +916,12 @@ class App extends Component {
                                       <option>USDC</option>
                                     )}
                                 </select>
-                              )}
+							  </div>
+							  )}
                               {shareholder.protocol !== "maker" && (
+							  <div className="custom-select">
                                 <select
-                                  className="custom-search-select"
+                                  className="select2"
                                   onChange={this.handleAssetChange(idx)}
                                 >
                                   <option value="" selected disabled>
@@ -927,29 +931,32 @@ class App extends Component {
                                   <option>ETH</option>
                                   <option>USDC</option>
                                 </select>
+								</div>
                               )}
-                              {shareholder.name !== "flashPayback" && shareholder.name !== "openVault" && <input
+                              {shareholder.name != "flashPayback" && shareholder.name != "openVault" && <input
+							    className="input2"
                                 type="number"
                                 placeholder={`Amount`}
                                 onChange={this.handleAmountChange(idx)}
                               />}{" "}
-                              {shareholder.name === "swap" && (
+                              {shareholder.name == "swap" && (
+							  <div className="custom-select">
                                 <select
-                                  className=""
+                                  className="select2"
                                   onChange={this.handleBuyingAssetChange(idx)}
                                 >
                                   <option value="" selected disabled>
-                                    Select Buying Asset
+                                    Buying Asset
                                   </option>
                                   <option>ETH</option>
                                   <option>DAI</option>
                                   <option>USDC</option>
                                 </select>
+								</div>
                               )}
-                              {shareholder.protocol === "maker" &&
-                                shareholder.name !== "openVault" &&
-                                (
-                                  <input
+                              {shareholder.protocol == "maker" &&
+                                shareholder.name != "openVault" && (
+                                  <input className="input2"
                                     type="number"
                                     placeholder={`Vault Id`}
                                     onChange={this.handleVaultIdChange(idx)}
@@ -978,7 +985,9 @@ class App extends Component {
                           >
                             Execute
                           </button>
+						 
                         </form>
+					
                       </div>
                     </div>
                   </div>
