@@ -31,18 +31,19 @@ body {
     background-size: cover;
     background-position: center;
     color: white;
+	justify-content: center;
     font-family: 'Rubik', sans-serif;
     font-size: 20px;
     line-height: 30px;
 }
 
 .container1 {
-	border:1px #ccc solid;
+	border:1px transparent;
 	padding:10px;
 	display:flex;
 }
 .container2 {
-	border:1px #ccc solid;
+	border:1px transparent;
 	padding:10px;
 	display:flex;
 	justify-content: center;
@@ -56,38 +57,42 @@ body {
   display: grid;
   grid-template-columns: 1fr;
   grid-template-rows: 30px 1fr 30px;
-  border:1px #3498DB solid;
+  border:1px transparent;
 }
 
 .gridbody {
-  height: 88vh;
-  width: 130vh;
+  height: 85vh;
+  width: 127vh;
+  border-radius:10px;
+  margin:10px 10px 10px 10px;
   display: grid;
   grid-template-rows: 1fr 3fr;
   overflow: hidden;
-  border:1px #3498DB solid;
+  background: #fff;
+  border:1px transparent;
 }
 
 .gridcontent {
   overflow-y: scroll;
-  height: 88vh;
-  width: 130vh;
+  height: 85vh;
+  width: 127vh;
+  margin:0px 0px 0px 0px;
   grid-template-rows: 1fr 3fr;
   padding: 20px;
-  border:1px #3498DB solid;
+  border:1px transparent;
 }
 
 .box1 {
-	border:1px #ccc solid;
+	border:1px transparent;
 	flex:1;
 }
 .box2 {
-	border:1px #ccc solid;
+	border:1px transparent;
 	flex:2;
 }
 
 .box3 {
-	border:1px #3498DB solid;
+	border:1px transparent;
 	flex-direction:row;
 }
 
@@ -151,6 +156,7 @@ body {
     max-width: 100%;
     padding: 0 30px;
     text-align: center;
+	top:53vh;
     -webkit-transform: translate(-50%, 0);
     transform: translate(-50%, 0);
     opacity: 0;
@@ -424,6 +430,7 @@ input:focus {
   height:50px;
   width: 12.5em;
   top:30px;
+  left:5px;
   bottom: 5px;
   border-radius: 10px;
   border:none;
@@ -445,6 +452,7 @@ input:focus {
 
 .input2:focus {
   border-bottom: 6px solid #13bab5;
+  top:28px;
 }
 
 form {
@@ -462,9 +470,9 @@ form {
   max-width: 15.3em;
   cursor: pointer;
   border: 0 none;
-  margin:4px 4px 4px 1px;
+  margin:5px 0px 1px 0px;
   background:transparent;
-  padding: 1.8em;
+  padding: 1.8em 1.2em 1.8em 1.2em;
 }
 .select,
 .label{
