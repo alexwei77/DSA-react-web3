@@ -8,8 +8,8 @@ class Home extends Component {
     return (
       <div id="container">
 	  <div className="content">
-      <h1>DSA</h1>
-      <h3>easy to use custom defi dashboard</h3>
+      <h1>DSA-CUSTOMISER</h1>
+      <h3>Easy to use custom DeFi dashboard</h3>
 <Link to='/custom'><button type="submit" id="btn">Try Customiser</button></Link>
 </div>
 </div>
